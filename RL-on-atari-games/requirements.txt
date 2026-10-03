@@ -1,0 +1,4 @@
+gymnasium[classic-control]
+tqdm
+torch --index-url https://download.pytorch.org/whl/cu132
+torchvision --index-url https://download.pytorch.org/whl/cu132
