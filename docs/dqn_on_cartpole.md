@@ -1,6 +1,6 @@
 # DQN On CartPole
 
-![Bot playing CartPole](medias\eval-episode-22.gif)
+![Bot playing CartPole](./medias/eval-episode-22.gif)
 
 Note: Most of the environment description and technical details in this section are adapted from the official [Gymnasium documentation](https://gymnasium.farama.org/environments/classic_control/cart_pole/). The explanations and implementation-specific details have been added or adapted where relevant to this project.
 
@@ -40,4 +40,4 @@ Observation: [ 0.03651603 -0.15809521 -0.04385493  0.23530404]
 
 The model used is a dense neural network made with torch.nn modules
 
-![architecture of the model](medias\DQN_CartPole_Model.gv.png)
+![architecture of the model](./medias/DQN_CartPole_Model.gv.png)
