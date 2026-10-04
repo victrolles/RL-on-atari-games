@@ -1,4 +1,10 @@
+--extra-index-url https://download.pytorch.org/whl/cu132
+
+torch
+torchvision
 gymnasium[classic-control]
+gymnasium[other]
+wandb
 tqdm
-torch --index-url https://download.pytorch.org/whl/cu132
-torchvision --index-url https://download.pytorch.org/whl/cu132
+torchview
+graphviz

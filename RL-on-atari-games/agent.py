@@ -2,8 +2,10 @@
 import torch
 import torch.nn as nn
 
+from config import Config
+
 class DQN(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
+    def __init__(self, input_size: int, hidden_size: int, output_size: int):
         super(DQN, self).__init__()
 
         self.fully_connected_layers = nn.Sequential(
@@ -20,19 +22,16 @@ class DQN(nn.Module):
         return self.fully_connected_layers(x)
 
 class Agent:
-    def __init__(self, input_size, hidden_size, output_size, device=torch.device("cuda")):
-        self.device = (
-            torch.device(device)
-            if device is not None
-            else torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        )
-        self.model = DQN(input_size, hidden_size, output_size).to(self.device)
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.001)
+    def __init__(self, config: Config, input_size: int, output_size: int):
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model = DQN(input_size, config.hidden_size, output_size).to(self.device)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config.learning_rate)
         self.criterion = nn.MSELoss()
-        self.epsilon = 1.0  # Exploration rate
+        self.epsilon = config.epsilon
+        self.config = config
 
-    def select_action(self, state):
-        if torch.rand(1).item() < self.epsilon:
+    def select_action(self, state, deterministic=False):
+        if torch.rand(1).item() < self.epsilon and not deterministic:
             # Explore: select a random action
             action = torch.randint(0, self.model.fully_connected_layers[-1].out_features, (1,)).item()
         else:
@@ -47,7 +46,7 @@ class Agent:
         # Compute the target Q-value
         with torch.no_grad():
             next_state = torch.tensor(next_state, dtype=torch.float32).unsqueeze(0).to(self.device)
-            target_q_value = reward + (0.99 * torch.max(self.model(next_state)) * (1 - done))
+            target_q_value = reward + (self.config.gamma * torch.max(self.model(next_state)) * (1 - done))
 
         # Compute the current Q-value
         state = torch.tensor(state, dtype=torch.float32).unsqueeze(0).to(self.device)
@@ -61,3 +60,5 @@ class Agent:
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
+        return loss.item()
