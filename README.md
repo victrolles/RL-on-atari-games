@@ -1,25 +1,25 @@
 # Bot on Atari games
 
-## Github
+<table>
+  <tr>
+    <td align="center">
+      <b>DQN on CartPole</b>
+    </td>
+  </tr>
 
-```
-git init
-```
-
-## Dependancies
-
-- Docker (for Wandb)
-- Graphviz (for Torchview)
-- MoviePy (to record videos)
-
-## Setup
-
-```
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-```
-wandb.log()
-```
+  <tr>
+    <td align="center">
+      <a href="./docs/trainings/dql_on_cartpole/dql_on_cartpole.md">
+        <img
+          src="./docs/trainings/dql_on_cartpole/record_2.gif"
+          alt="DQN on CartPole"
+          width="400"
+        >
+      </a>
+      <br>
+      <a href="./docs/trainings/dql_on_cartpole/dql_on_cartpole.md">
+        View training details
+      </a>
+    </td>
+  </tr>
+</table>

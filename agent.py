@@ -1,8 +1,12 @@
 
+from pathlib import Path
+
 import torch
 import torch.nn as nn
+import numpy as np
 
 from config import Config
+from replay_buffer import ReplayBuffer
 
 class DQN(nn.Module):
     def __init__(self, input_size: int, hidden_size: int, output_size: int):
@@ -13,8 +17,6 @@ class DQN(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(),
             nn.Linear(hidden_size, output_size)
         )
 
@@ -22,13 +24,19 @@ class DQN(nn.Module):
         return self.fully_connected_layers(x)
 
 class Agent:
-    def __init__(self, config: Config, input_size: int, output_size: int):
+    def __init__(self, config: Config, input_size: int, output_size: int, replay_buffer: ReplayBuffer):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = DQN(input_size, config.hidden_size, output_size).to(self.device)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config.learning_rate)
         self.criterion = nn.MSELoss()
+        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(self.optimizer, T_0=50)
         self.epsilon = config.epsilon
+        self.replay_buffer = replay_buffer
         self.config = config
+
+        if self.config.load_model:
+            self.load_model(self.config.model_path)
+            
 
     def select_action(self, state, deterministic=False):
         if torch.rand(1).item() < self.epsilon and not deterministic:
@@ -42,23 +50,77 @@ class Agent:
                 action = torch.argmax(q_values).item()
         return action
 
-    def update(self, state, action, reward, next_state, done):
-        # Compute the target Q-value
-        with torch.no_grad():
-            next_state = torch.tensor(next_state, dtype=torch.float32).unsqueeze(0).to(self.device)
-            target_q_value = reward + (self.config.gamma * torch.max(self.model(next_state)) * (1 - done))
+    def update(self):
 
-        # Compute the current Q-value
-        state = torch.tensor(state, dtype=torch.float32).unsqueeze(0).to(self.device)
-        action = torch.tensor(action).unsqueeze(0).to(self.device)
-        current_q_value = self.model(state)[0, action].squeeze()
+        if len(self.replay_buffer) < self.config.batch_size:
+            return 0.0  # Not enough samples to update
+        else :
+            accumulated_loss = 0.0
+            for _ in range(self.config.training_steps):
+                # Sample a batch of experiences from the replay buffer
+                states, actions, rewards, next_states, dones = self.replay_buffer.sample(self.config.batch_size)
 
-        # Compute the loss
-        loss = self.criterion(current_q_value, target_q_value)
+                # Convert batch to tensors
+                states = torch.from_numpy(np.asarray(states, dtype=np.float32)).to(self.device)
 
-        # Backpropagation
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
+                actions = torch.tensor(
+                    actions,
+                    dtype=torch.long,
+                    device=self.device
+                ).unsqueeze(1)
 
-        return loss.item()
+                rewards = torch.tensor(
+                    rewards,
+                    dtype=torch.float32,
+                    device=self.device
+                ).unsqueeze(1)
+
+                next_states = torch.from_numpy(
+                    np.asarray(next_states, dtype=np.float32)
+                ).to(self.device)
+
+                dones = torch.tensor(
+                    dones,
+                    dtype=torch.float32,
+                    device=self.device
+                ).unsqueeze(1)
+
+                # Compute the target Q-values
+                with torch.no_grad():
+                    target_q_values = rewards + (self.config.gamma * torch.max(self.model(next_states), dim=1, keepdim=True)[0] * (1 - dones))
+
+                # Compute the current Q-values
+                current_q_values = self.model(states).gather(1, actions)
+
+                # Compute the loss
+                loss = self.criterion(current_q_values, target_q_values)
+
+                # Backpropagation
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+
+                accumulated_loss += loss.item()
+
+            # Decay epsilon
+            self.epsilon = max(self.config.epsilon_min, self.epsilon * self.config.epsilon_decay)
+
+            # Update the learning rate scheduler
+            self.scheduler.step()
+
+            return accumulated_loss / self.config.training_steps
+
+    def save_model(self, episode: int, score: float):
+        path = Path(self.config.run_dir)
+        path = Path.joinpath(path, "models")
+        model_name = f"model_episode_{episode}_score_{score:.2f}.pth"
+        if not path.exists():
+            path.mkdir(parents=True, exist_ok=True)
+        full_path = Path.joinpath(path, model_name)
+        torch.save(self.model.state_dict(), full_path)
+
+    def load_model(self, path: str):
+        print(f"Loading model from {path}...")
+        self.model.load_state_dict(torch.load(path, map_location=self.device))
+        self.model.eval()
+        
