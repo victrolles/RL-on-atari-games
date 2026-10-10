@@ -11,3 +11,6 @@ class DQN(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_size, output_size)
         )
+
+    def forward(self, x):
+        return self.fully_connected_layers(x)

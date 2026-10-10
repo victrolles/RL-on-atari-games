@@ -7,14 +7,14 @@ import torch.nn.functional as F
 
 from agents.sac.policy_network import PolicyNetwork
 from agents.sac.q_network import QNetwork
-from config import Config
+from configs import SACRunConfig
 from replay_buffer import ReplayBuffer
-from agents import BaseAgent
+from agents import Agent
 
 
-class SACAgent(BaseAgent):
+class SACAgent(Agent):
     def __init__(self,
-                 config: Config,
+                 config: SACRunConfig,
                  replay_buffer: ReplayBuffer,
                  state_size: int,
                  action_size: int):
@@ -24,7 +24,7 @@ class SACAgent(BaseAgent):
         # Actor
         self.actor = PolicyNetwork(
             num_inputs=state_size,
-            hidden_size=config.hidden_size,
+            hidden_size=config.network.hidden_size,
             num_actions=action_size
         ).to(self.device)
 
@@ -32,13 +32,13 @@ class SACAgent(BaseAgent):
         self.critic_1 = QNetwork(
             num_inputs=state_size,
             num_actions=action_size,
-            hidden_size=config.hidden_size
+            hidden_size=config.network.hidden_size
         ).to(self.device)
 
         self.critic_2 = QNetwork(
             num_inputs=state_size,
             num_actions=action_size,
-            hidden_size=config.hidden_size
+            hidden_size=config.network.hidden_size
         ).to(self.device)
 
         # ----------------------------------
@@ -64,16 +64,16 @@ class SACAgent(BaseAgent):
         # Optimizers
         # ----------------------------------
 
-        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=config.actor_lr)
-        self.critic_1_optimizer = torch.optim.Adam(self.critic_1.parameters(), lr=config.critic_lr)
-        self.critic_2_optimizer = torch.optim.Adam(self.critic_2.parameters(), lr=config.critic_lr)
+        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=config.agent.actor_lr)
+        self.critic_1_optimizer = torch.optim.Adam(self.critic_1.parameters(), lr=config.agent.critic_lr)
+        self.critic_2_optimizer = torch.optim.Adam(self.critic_2.parameters(), lr=config.agent.critic_lr)
 
-        if self.config.load_model:
-            self.load_model(
-                actor_path=self.config.actor_model_path,
-                critic_1_path=self.config.critic_1_model_path,
-                critic_2_path=self.config.critic_2_model_path
-            )
+        # if self.config.network.load_model:
+        #     self.load_model(
+        #         actor_path=self.config.actor_model_path,
+        #         critic_1_path=self.config.critic_1_model_path,
+        #         critic_2_path=self.config.critic_2_model_path
+        #     )
 
     def select_action(self, state: np.ndarray, deterministic: bool = False) -> np.ndarray:
 
@@ -91,7 +91,7 @@ class SACAgent(BaseAgent):
 
         return (action.cpu().numpy()[0])
 
-    def train(self) -> dict:
+    def update(self) -> dict:
 
         # ==================================
         # Sample replay buffer
@@ -146,8 +146,8 @@ class SACAgent(BaseAgent):
             minimum_target_q = torch.min(target_q1, target_q2)
 
             # SAC entropy term
-            soft_target_q = minimum_target_q - self.config.alpha * next_log_probs
-            target_q = rewards + self.config.gamma * (1 - dones) * soft_target_q
+            soft_target_q = minimum_target_q - self.config.agent.alpha * next_log_probs
+            target_q = rewards + self.config.agent.gamma * (1 - dones) * soft_target_q
 
         # ==================================
         # Train critic 1
@@ -184,7 +184,7 @@ class SACAgent(BaseAgent):
         # Get the minimum of the two Q-values for the new actions
         minimum_q = torch.min(q1_new_actions,q2_new_actions)
 
-        actor_loss = (self.config.alpha * log_probs - minimum_q).mean()
+        actor_loss = (self.config.agent.alpha * log_probs - minimum_q).mean()
 
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
@@ -214,7 +214,7 @@ class SACAgent(BaseAgent):
         }
 
     def save_model(self, episode: int, reward: float):
-        model_dir = Path(self.config.run_dir) / "models"
+        model_dir = Path(self.config.logging.run_dir) / "models"
         model_dir.mkdir(parents=True, exist_ok=True)
 
         # Save actor
@@ -246,7 +246,7 @@ class SACAgent(BaseAgent):
         network,
         target_network
     ):
-        tau = self.config.tau
+        tau = self.config.agent.tau
 
         with torch.no_grad():
             for parameter, target_parameter in zip(

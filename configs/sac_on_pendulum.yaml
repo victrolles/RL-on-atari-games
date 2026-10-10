@@ -1,0 +1,33 @@
+
+algorithm: sac
+
+env:
+  name: Pendulum-v1
+  device: cuda
+  normalize: true
+
+network:
+  hidden_size: 64
+  save_model: true
+
+training:
+  nb_episodes: 100
+  learning_starts: 1000
+  random_steps: 1000
+  train_freq: 5
+  gradient_steps: 5
+
+evaluation:
+  nb_episodes: 1
+  nb_interval: 5
+
+replay:
+  capacity: 10000
+  batch_size: 64
+
+agent:
+  actor_lr: 0.003
+  critic_lr: 0.003
+  gamma: 0.99
+  tau: 0.005
+  alpha: 0.2

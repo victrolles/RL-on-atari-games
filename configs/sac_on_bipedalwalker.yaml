@@ -1,0 +1,33 @@
+algorithm: sac
+
+env:
+  name: BipedalWalker-v3
+  device: cuda
+  normalize: false
+
+network:
+  hidden_size: 256
+  save_model: true
+
+training:
+  nb_episodes: 1000
+  total_timesteps: 500000
+  learning_starts: 10000
+  random_steps: 10000
+  train_freq: 1
+  gradient_steps: 1
+
+evaluation:
+  nb_episodes: 10
+  nb_interval: 20
+
+replay:
+  capacity: 300000
+  batch_size: 256
+
+agent:
+  actor_lr: 0.0003
+  critic_lr: 0.0003
+  gamma: 0.98
+  tau: 0.005
+  alpha: 0.2

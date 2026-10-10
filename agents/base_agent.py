@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from config import Config
+from configs import Config
 from replay_buffer import ReplayBuffer
 
 import torch
@@ -14,7 +14,7 @@ class BaseAgent(ABC):
         self.replay_buffer = replay_buffer
 
         # Device
-        if config.device == "cuda" and torch.cuda.is_available():
+        if config.env.device == "cuda" and torch.cuda.is_available():
             self.device = torch.device("cuda")
         else:
             self.device = torch.device("cpu")
@@ -22,11 +22,11 @@ class BaseAgent(ABC):
         print(f"Using device: {self.device}")
 
     @abstractmethod
-    def select_action(self, state):
+    def select_action(self, state, deterministic: bool = False):
         pass
 
     @abstractmethod
-    def update(self):
+    def update(self) -> dict:
         pass
 
     @abstractmethod
