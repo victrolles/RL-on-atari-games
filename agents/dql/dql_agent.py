@@ -7,17 +7,22 @@ import numpy as np
 
 from config_2 import Config
 from replay_buffer import ReplayBuffer
+from agents import BaseAgent
+    
+class DQLAgent(BaseAgent):
+    def __init__(self,
+                 config: Config,
+                 replay_buffer: ReplayBuffer,
+                 state_size: int,
+                 action_size: int):
 
-class DQLAgent:
-    def __init__(self, config: Config, input_size: int, output_size: int, replay_buffer: ReplayBuffer):
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = DQLAgent(input_size, config.hidden_size, output_size).to(self.device)
+        super().__init__(config, replay_buffer)
+
+        self.model = DQLAgent(state_size, config.hidden_size, action_size).to(self.device)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config.learning_rate)
         self.criterion = nn.MSELoss()
         self.scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(self.optimizer, T_0=50)
         self.epsilon = config.epsilon
-        self.replay_buffer = replay_buffer
-        self.config = config
 
         if self.config.load_model:
             self.load_model(self.config.model_path)
@@ -95,10 +100,10 @@ class DQLAgent:
 
             return accumulated_loss / self.config.training_steps
 
-    def save_model(self, episode: int, score: float):
+    def save_model(self, episode: int, reward: float):
         path = Path(self.config.run_dir)
         path = Path.joinpath(path, "models")
-        model_name = f"model_episode_{episode}_score_{score:.2f}.pth"
+        model_name = f"model_episode_{episode}_reward_{reward:.2f}.pth"
         if not path.exists():
             path.mkdir(parents=True, exist_ok=True)
         full_path = Path.joinpath(path, model_name)

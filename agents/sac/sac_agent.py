@@ -9,25 +9,17 @@ from agents.sac.policy_network import PolicyNetwork
 from agents.sac.q_network import QNetwork
 from config import Config
 from replay_buffer import ReplayBuffer
+from agents import BaseAgent
 
 
-class SACAgent:
+class SACAgent(BaseAgent):
     def __init__(self,
                  config: Config,
                  replay_buffer: ReplayBuffer,
                  state_size: int,
                  action_size: int):
 
-        self.config = config
-        self.replay_buffer = replay_buffer
-
-        # Device
-        if config.device == "cuda" and torch.cuda.is_available():
-            self.device = torch.device("cuda")
-
-        else:
-            self.device = torch.device("cpu")
-        print(f"Using device: {self.device}")
+        super().__init__(config, replay_buffer)
 
         # Actor
         self.actor = PolicyNetwork(
@@ -221,23 +213,23 @@ class SACAgent:
             "log_prob": log_probs.mean().item()
         }
 
-    def save_model(self, episode: int, mean_reward: float):
+    def save_model(self, episode: int, reward: float):
         model_dir = Path(self.config.run_dir) / "models"
         model_dir.mkdir(parents=True, exist_ok=True)
 
         # Save actor
-        actor_path = model_dir / f"actor_episode_{episode}_reward_{mean_reward:.2f}.pth"
+        actor_path = model_dir / f"actor_episode_{episode}_reward_{reward:.2f}.pth"
         torch.save(self.actor.state_dict(), actor_path)
 
         # Save critic 1
-        critic_1_path = model_dir / f"critic_1_episode_{episode}_reward_{mean_reward:.2f}.pth"
+        critic_1_path = model_dir / f"critic_1_episode_{episode}_reward_{reward:.2f}.pth"
         torch.save(self.critic_1.state_dict(), critic_1_path)
 
         # Save critic 2
-        critic_2_path = model_dir / f"critic_2_episode_{episode}_reward_{mean_reward:.2f}.pth"
+        critic_2_path = model_dir / f"critic_2_episode_{episode}_reward_{reward:.2f}.pth"
         torch.save(self.critic_2.state_dict(), critic_2_path)
 
-        print(f"Models saved at episode {episode} with mean reward {mean_reward:.2f}")
+        print(f"Models saved at episode {episode} with mean reward {reward:.2f}")
 
     def load_model(self, actor_path: str, critic_1_path: str, critic_2_path: str):
         print(f"Loading actor model from {actor_path}...")
