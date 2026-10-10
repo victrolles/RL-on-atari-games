@@ -2,12 +2,7 @@
 
 torch
 torchvision
-gymnasium[classic-control]
-
-swig
 gymnasium[box2d]
-
-
 gymnasium[other]
 wandb
 tqdm

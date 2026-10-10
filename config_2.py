@@ -4,7 +4,7 @@ from dataclasses import dataclass
 @dataclass
 class Config:
     # Environment settings
-    env_name: str = "Pendulum-v1"
+    env_name: str = "BipedalWalker-v3"
     run_dir: str = ""
 
     # Model settings
@@ -16,12 +16,12 @@ class Config:
     critic_2_model_path: str = "./runs/CartPole-v1/run_4413/models/critic_2_model_episode_1600_score_500.00.pth"
 
     # Training settings
-    nb_episodes: int = 100
-    nb_evaluation_episodes: int = 1
-    evaluation_interval: int = 5
+    nb_episodes: int = 10000
+    nb_evaluation_episodes: int = 2
+    evaluation_interval: int = 50
 
-    gamma: float = 0.99
-    tau: float = 0.005
+    gamma: float = 0.98
+    tau: float = 0.02
     alpha: float = 0.2
 
     # Optimizers
@@ -33,11 +33,7 @@ class Config:
     batch_size: int = 64
 
     # Initial exploration
-    random_steps: int = 1_000
-    learning_starts: int = 1_000
+    random_steps: int = 10_000
 
     # Device
     device: str = "cuda"
-
-    train_freq = 5
-    gradient_steps = 5

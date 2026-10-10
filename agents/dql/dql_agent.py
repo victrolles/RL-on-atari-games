@@ -5,28 +5,13 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from config import Config
+from config_2 import Config
 from replay_buffer import ReplayBuffer
 
-class DQN(nn.Module):
-    def __init__(self, input_size: int, hidden_size: int, output_size: int):
-        super(DQN, self).__init__()
-
-        self.fully_connected_layers = nn.Sequential(
-            nn.Linear(input_size, hidden_size),
-            nn.ReLU(),
-            nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(),
-            nn.Linear(hidden_size, output_size)
-        )
-
-    def forward(self, x):
-        return self.fully_connected_layers(x)
-
-class Agent:
+class DQLAgent:
     def __init__(self, config: Config, input_size: int, output_size: int, replay_buffer: ReplayBuffer):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = DQN(input_size, config.hidden_size, output_size).to(self.device)
+        self.model = DQLAgent(input_size, config.hidden_size, output_size).to(self.device)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config.learning_rate)
         self.criterion = nn.MSELoss()
         self.scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(self.optimizer, T_0=50)

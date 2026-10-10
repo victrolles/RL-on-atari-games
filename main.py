@@ -1,8 +1,8 @@
 from pathlib import Path
 import random
 
-from agent import Agent
-from trainer import Trainer
+from agents.sac.sac_agent import SACAgent
+from agents.sac.trainer import Trainer
 from env import Environment
 from config import Config
 from replay_buffer import ReplayBuffer
@@ -32,12 +32,12 @@ def main():
     env = Environment(config)
 
     # Initialize the replay buffer
-    replay_buffer = ReplayBuffer(capacity=config.capacity, batch_size=config.batch_size)
+    replay_buffer = ReplayBuffer(config.capacity, config.batch_size)
 
     # Initialize the agent
-    input_size = env.train_env.observation_space.shape[0]
-    output_size = env.train_env.action_space.n
-    agent = Agent(config, input_size, output_size, replay_buffer)
+    state_size = env.train_env.observation_space.shape[0]
+    action_size = env.train_env.action_space.shape[0]
+    agent = SACAgent(config, replay_buffer, state_size, action_size)
     
     # Initialize the trainer
     trainer = Trainer(agent, env, config, replay_buffer)

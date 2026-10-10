@@ -8,8 +8,8 @@ from torchview import draw_graph
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from agent import Agent
-from config import Config
+from agents.dql.dqn import Agent
+from config_2 import Config
 from replay_buffer import ReplayBuffer
 
 def main():

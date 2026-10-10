@@ -4,8 +4,8 @@ from pathlib import Path
 from tqdm import tqdm
 import wandb
 
-from config import Config
-from agent import Agent
+from config_2 import Config
+from agents.dql.dqn import Agent
 from env import Environment
 from replay_buffer import ReplayBuffer
 
@@ -23,11 +23,14 @@ class Trainer:
         wandb.init(project="atari-rl", config=asdict(config), dir=config.run_dir)
 
     def train(self):
+        total_steps = 0
+
         for episode in tqdm(range(self.config.nb_episodes)):
             # Reset the environment
-            obs, __import__ = self.env.train_env.reset()
+            obs, _ = self.env.train_env.reset()
             done = False
             cumulated_reward = 0.0
+            steps_per_episode = 0
 
             while not done:
                 # Select an action using the agent
@@ -40,6 +43,8 @@ class Trainer:
 
                 # Add the experience to the replay buffer
                 self.replay_buffer.push(obs, action, reward, next_obs, done)
+                total_steps += 1
+                steps_per_episode += 1
 
                 # Move to the next observation
                 obs = next_obs
