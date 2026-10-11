@@ -258,33 +258,105 @@ class SACAgent(Agent):
             "log_prob": log_probs.mean().item()
         }
 
-    def save_model(self, episode: int, reward: float):
-        model_dir = Path(self.config.logging.run_dir) / "models"
-        model_dir.mkdir(parents=True, exist_ok=True)
+    def save_checkpoint(
+        self,
+        episode: int,
+        global_step: int,
+        best_reward: float,
+        filename: str = "latest.pt",
+    ):
+        checkpoint_dir = (
+            Path(self.config.logging.run_dir)
+            / "checkpoints"
+        )
+        checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
-        # Save actor
-        actor_path = model_dir / f"actor_episode_{episode}_reward_{reward:.2f}.pth"
-        torch.save(self.actor.state_dict(), actor_path)
+        checkpoint = {
+            # Training progress
+            "episode": int(episode),
+            "global_step": int(global_step),
+            "best_reward": float(best_reward),
 
-        # Save critic 1
-        critic_1_path = model_dir / f"critic_1_episode_{episode}_reward_{reward:.2f}.pth"
-        torch.save(self.critic_1.state_dict(), critic_1_path)
+            # Actor
+            "actor": self.actor.state_dict(),
 
-        # Save critic 2
-        critic_2_path = model_dir / f"critic_2_episode_{episode}_reward_{reward:.2f}.pth"
-        torch.save(self.critic_2.state_dict(), critic_2_path)
+            # Critics
+            "critic_1": self.critic_1.state_dict(),
+            "critic_2": self.critic_2.state_dict(),
 
-        print(f"Models saved at episode {episode} with mean reward {reward:.2f}")
+            # Target critics
+            "target_critic_1": self.target_critic_1.state_dict(),
+            "target_critic_2": self.target_critic_2.state_dict(),
 
-    def load_model(self, actor_path: str, critic_1_path: str, critic_2_path: str):
-        print(f"Loading actor model from {actor_path}...")
-        self.actor.load_state_dict(torch.load(actor_path, map_location=self.device))
+            # Automatic entropy tuning
+            "log_alpha": self.log_alpha.detach().clone(),
 
-        print(f"Loading critic 1 model from {critic_1_path}...")
-        self.critic_1.load_state_dict(torch.load(critic_1_path, map_location=self.device))
+            # Optimizers
+            "actor_optimizer": self.actor_optimizer.state_dict(),
+            "critic_1_optimizer": self.critic_1_optimizer.state_dict(),
+            "critic_2_optimizer": self.critic_2_optimizer.state_dict(),
+            "alpha_optimizer": self.alpha_optimizer.state_dict(),
+        }
 
-        print(f"Loading critic 2 model from {critic_2_path}...")
-        self.critic_2.load_state_dict(torch.load(critic_2_path, map_location=self.device))
+        path = checkpoint_dir / filename
+
+        # Write to a temporary file first
+        temporary_path = path.with_suffix(".tmp")
+        torch.save(checkpoint, temporary_path)
+
+        # Replace the previous checkpoint atomically
+        temporary_path.replace(path)
+
+        print(f"Checkpoint saved: {path}")
+
+    def load_checkpoint(self, checkpoint_path: str) -> dict:
+
+        checkpoint = torch.load(
+            checkpoint_path,
+            map_location=self.device,
+            weights_only=True
+        )
+
+        # Actor
+        self.actor.load_state_dict(checkpoint["actor"])
+
+        # Critics
+        self.critic_1.load_state_dict(checkpoint["critic_1"])
+        self.critic_2.load_state_dict(checkpoint["critic_2"])
+
+        # Target critics
+        self.target_critic_1.load_state_dict(
+            checkpoint["target_critic_1"]
+        )
+        self.target_critic_2.load_state_dict(
+            checkpoint["target_critic_2"]
+        )
+
+        # Restore alpha
+        with torch.no_grad():
+            self.log_alpha.copy_(checkpoint["log_alpha"])
+
+        # Optimizers
+        self.actor_optimizer.load_state_dict(
+            checkpoint["actor_optimizer"]
+        )
+        self.critic_1_optimizer.load_state_dict(
+            checkpoint["critic_1_optimizer"]
+        )
+        self.critic_2_optimizer.load_state_dict(
+            checkpoint["critic_2_optimizer"]
+        )
+        self.alpha_optimizer.load_state_dict(
+            checkpoint["alpha_optimizer"]
+        )
+
+        print(f"Checkpoint loaded: {checkpoint_path}")
+
+        return {
+            "episode": checkpoint["episode"],
+            "global_step": checkpoint["global_step"],
+            "best_reward": checkpoint["best_reward"],
+        }
 
     def soft_update(
         self,

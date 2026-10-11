@@ -4,7 +4,7 @@ from pathlib import Path
 from tqdm import tqdm
 import wandb
 
-from configs import Config
+from configs import RunConfig
 from replay_buffer import ReplayBuffer
 from agents import Agent
 from env import Environment
@@ -13,19 +13,22 @@ class Trainer:
     def __init__(self,
                  agent: Agent,
                  env: Environment,
-                 config: Config,
+                 config: RunConfig,
                  replay_buffer: ReplayBuffer):
         
         self.agent = agent
         self.env = env
         self.config = config
         self.replay_buffer = replay_buffer
+
+        self.start_episode = 0
+        self.global_step = 0
+        self.best_reward = float("-inf")
+
         wandb.init(project="atari-rl", config=asdict(config), dir=config.logging.run_dir)
 
     def train(self):
-        total_steps = 0
-
-        for episode in tqdm(range(self.config.training.nb_episodes)):
+        for episode in tqdm(range(self.start_episode, self.config.training.nb_episodes)):
             # Reset the environment
             state, _ = self.env.train_env.reset()
             done = False
@@ -40,7 +43,7 @@ class Trainer:
             while not done:
 
                 # Select an action using the agent
-                if (total_steps < self.config.training.random_steps):
+                if (self.global_step < self.config.training.random_steps):
                     action = self.env.train_env.action_space.sample()
                 else:
                     action = self.agent.select_action(state)
@@ -56,13 +59,13 @@ class Trainer:
                 # Move to the next observation
                 state = next_state
                 steps_per_episode += 1
-                total_steps += 1
+                self.global_step += 1
 
                 # Update the agent
                 if (
-                    total_steps >= self.config.training.learning_starts
+                    self.global_step >= self.config.training.learning_starts
                     and len(self.replay_buffer) >= self.config.replay.batch_size
-                    and total_steps % self.config.training.train_freq == 0
+                    and self.global_step % self.config.training.train_freq == 0
                 ):
 
                     for _ in range(self.config.training.gradient_steps):
@@ -72,10 +75,28 @@ class Trainer:
             # evaluate the agent
             if (episode + 1) % self.config.evaluation.nb_interval == 0:
                 mean_reward = self.eval(episode + 1)
-                self.agent.save_model(episode + 1, mean_reward)
+                # checkpoint the best model
+                if mean_reward > self.best_reward:
+                    self.best_reward = mean_reward
+
+                    self.agent.save_checkpoint(
+                        episode=episode,
+                        global_step=self.global_step,
+                        best_reward=self.best_reward,
+                        filename="best.pt"
+                    )
+
+            # checkpoint the agent
+            if (episode + 1) % self.config.logging.checkpoint_interval == 0:
+                self.agent.save_checkpoint(
+                    episode=episode,
+                    global_step=self.global_step,
+                    best_reward=cumulated_reward,
+                    filename="latest.pt"
+                )
         
             wandb.log({
-                "Steps total": total_steps,
+                "Steps total": self.global_step,
                 "Steps per episode": steps_per_episode,
                 "Reward training": cumulated_reward,
                 "Reward evaluation": mean_reward if (episode + 1) % self.config.evaluation.nb_interval == 0 else None,
@@ -83,11 +104,9 @@ class Trainer:
             })
 
     def eval(self, episode: int) -> float:
-            
-            print(f"\nStarting evaluation for {self.config.evaluation.nb_episodes} episodes...")
             mean_reward = 0.0
     
-            for eval_episode in range(self.config.evaluation.nb_episodes):
+            for _ in range(self.config.evaluation.nb_episodes):
                 obs, _ = self.env.eval_env.reset()
                 done = False
                 cumulated_reward = 0.0

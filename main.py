@@ -6,10 +6,10 @@ from pathlib import Path
 from agents import SACAgent, DQNAgent
 from trainer import Trainer
 from env import Environment
-from configs import load_config, save_config, Config
+from configs import load_config, save_config, RunConfig
 from replay_buffer import ReplayBuffer
 
-def create_run_directory(config: Config) -> Path:
+def create_run_directory(config: RunConfig) -> Path:
     """Create a unique directory for the experiment."""
 
     runs_dir = Path(config.logging.run_dir)
@@ -35,7 +35,8 @@ def create_run_directory(config: Config) -> Path:
     return run_dir
 
 
-def create_agent(config, replay_buffer, env):
+
+def create_agent(config: RunConfig, replay_buffer: ReplayBuffer, env: Environment):
     """Initialize the appropriate RL agent."""
 
     state_size = env.train_env.observation_space.shape[0]
@@ -72,21 +73,85 @@ def main():
     parser.add_argument(
         "--config",
         type=Path,
-        default=Path("configs/sac.yaml"),
-        help="Path to the YAML configuration file"
+        default=None,
+        help="Path to a YAML configuration file"
+    )
+
+    parser.add_argument(
+        "--checkpoint",
+        type=Path,
+        default=None,
+        help="Resume training from a checkpoint"
+    )
+
+    parser.add_argument(
+        "--episodes",
+        type=int,
+        default=None,
+        help="Total number of episodes to train"
     )
 
     args = parser.parse_args()
-    config = load_config(args.config)
 
     # ==================================
     # Setup experiment
     # ==================================
 
-    run_dir = create_run_directory(config)
+    if args.checkpoint is not None:
 
-    # Save the exact configuration
-    save_config(config, run_dir / "config.yaml")
+        checkpoint_path = args.checkpoint.resolve()
+
+        if not checkpoint_path.is_file():
+            parser.error(
+                f"Checkpoint does not exist: {checkpoint_path}"
+            )
+
+        # Expected structure:
+        # run_1234/checkpoints/latest.pt
+        run_dir = checkpoint_path.parent.parent
+
+        config_path = run_dir / "config.yaml"
+
+        if not config_path.is_file():
+            parser.error(
+                f"Configuration not found: {config_path}"
+            )
+
+        if args.config is not None:
+            parser.error(
+                "Do not specify --config when resuming. "
+                "The saved run configuration is loaded automatically."
+            )
+
+        config = load_config(config_path)
+        config.logging.run_dir = str(run_dir)
+
+        print(f"Resuming experiment from: {checkpoint_path}")
+
+    else:
+
+        config_path = (
+            args.config
+            if args.config is not None
+            else Path("configs/sac.yaml")
+        )
+
+        config = load_config(config_path)
+
+        run_dir = create_run_directory(config)
+
+        save_config(
+            config,
+            run_dir / "config.yaml"
+        )
+
+        checkpoint_path = None
+
+    if args.episodes is not None:
+        if args.episodes <= 0:
+            parser.error("--episodes must be positive")
+
+        config.training.nb_episodes = args.episodes
 
     # ==================================
     # Initialize environment
@@ -105,9 +170,29 @@ def main():
         agent = create_agent(config, replay_buffer, env)
 
         # Initialize trainer
-        trainer = Trainer(
-            agent, env, config, replay_buffer
-        )
+        trainer = Trainer(agent, env, config, replay_buffer)
+
+        # ==================================
+        # Load checkpoint if provided
+        # ==================================
+
+        if checkpoint_path is not None:
+
+            checkpoint_info = agent.load_checkpoint(
+                checkpoint_path
+            )
+
+            trainer.start_episode = (
+                checkpoint_info["episode"] + 1
+            )
+
+            trainer.global_step = (
+                checkpoint_info["global_step"]
+            )
+
+            trainer.best_reward = (
+                checkpoint_info["best_reward"]
+            )
 
         # ==================================
         # Training

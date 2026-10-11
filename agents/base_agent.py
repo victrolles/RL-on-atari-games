@@ -1,13 +1,13 @@
 from abc import ABC, abstractmethod
 
-from configs import Config
+from configs import RunConfig
 from replay_buffer import ReplayBuffer
 
 import torch
 
 class BaseAgent(ABC):
     def __init__(self,
-                 config: Config,
+                 config: RunConfig,
                  replay_buffer: ReplayBuffer):
         
         self.config = config
@@ -30,5 +30,9 @@ class BaseAgent(ABC):
         pass
 
     @abstractmethod
-    def save_model(self, episode: int, reward: float):
+    def save_checkpoint(self, episode: int, global_step: int, best_reward: float, filename: str):
+        pass
+
+    @abstractmethod
+    def load_checkpoint(self, filename: str):
         pass

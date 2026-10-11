@@ -8,7 +8,6 @@ env:
 
 network:
   hidden_size: 64
-  save_model: true
 
 training:
   nb_episodes: 100
@@ -32,3 +31,6 @@ agent:
   gamma: 0.99
   tau: 0.005
   alpha: 0.2
+
+logging:
+  checkpoint_interval: 10

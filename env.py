@@ -4,10 +4,10 @@ from pathlib import Path
 import gymnasium as gym
 from gymnasium.wrappers import RecordVideo, RescaleAction
 
-from configs import Config
+from configs import RunConfig
 
 class Environment:
-    def __init__(self, config: Config):
+    def __init__(self, config: RunConfig):
 
         # Training environment (no rendering)
         self.train_env = gym.make(config.env.name, render_mode="rgb_array")

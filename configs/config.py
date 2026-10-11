@@ -19,10 +19,6 @@ class EnvConfig:
 @dataclass
 class NetworkConfig:
     hidden_size: int = 256
-    save_model: bool = False
-    load_model: bool = False
-    model_path: str = ""
-
 
 @dataclass
 class TrainingConfig:
@@ -49,6 +45,7 @@ class ReplayConfig:
 class LoggingConfig:
     run_dir: str = "./runs"
     wandb_project: str = "atari-rl"
+    checkpoint_interval: int = 50
 
 
 # =====================================

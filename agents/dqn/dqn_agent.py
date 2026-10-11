@@ -25,10 +25,6 @@ class DQNAgent(BaseAgent):
         self.scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(self.optimizer, T_0=50)
         self.epsilon = config.agent.epsilon
 
-        if self.config.network.load_model:
-            self.load_model(self.config.network.model_path)
-            
-
     def select_action(self, state, deterministic: bool = False):
         if torch.rand(1).item() < self.epsilon and not deterministic:
             # Explore: select a random action
@@ -100,17 +96,90 @@ class DQNAgent(BaseAgent):
             "loss": loss.item()
         }
 
-    def save_model(self, episode: int, reward: float):
-        path = Path(self.config.logging.run_dir)
-        path = Path.joinpath(path, "models")
-        model_name = f"model_episode_{episode}_reward_{reward:.2f}.pth"
-        if not path.exists():
-            path.mkdir(parents=True, exist_ok=True)
-        full_path = Path.joinpath(path, model_name)
-        torch.save(self.model.state_dict(), full_path)
+    def save_checkpoint(
+        self,
+        episode: int,
+        global_step: int,
+        best_reward: float,
+        filename: str = "latest.pt",
+    ):
+        checkpoint_dir = (
+            Path(self.config.logging.run_dir)
+            / "checkpoints"
+        )
+        checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
-    def load_model(self, path: str):
-        print(f"Loading model from {path}...")
-        self.model.load_state_dict(torch.load(path, map_location=self.device))
-        self.model.eval()
-        
+        checkpoint = {
+            # Training progress
+            "episode": int(episode),
+            "global_step": int(global_step),
+            "best_reward": float(best_reward),
+
+            # Q-network
+            "model": self.model.state_dict(),
+
+            # Optimizer
+            "optimizer": self.optimizer.state_dict(),
+
+            # Learning rate scheduler
+            "scheduler": self.scheduler.state_dict(),
+
+            # Exploration
+            "epsilon": self.epsilon,
+        }
+
+        path = checkpoint_dir / filename
+
+        # Save to a temporary file first
+        temporary_path = path.with_suffix(".tmp")
+        torch.save(checkpoint, temporary_path)
+
+        # Atomically replace the previous checkpoint
+        temporary_path.replace(path)
+
+        print(f"Checkpoint saved: {path}")
+
+
+    def load_checkpoint(self, checkpoint_path: str | Path) -> dict:
+        checkpoint_path = Path(checkpoint_path)
+
+        print(f"Loading checkpoint from {checkpoint_path}...")
+
+        checkpoint = torch.load(
+            checkpoint_path,
+            map_location=self.device,
+            weights_only=True
+        )
+
+        # Restore Q-network
+        self.model.load_state_dict(
+            checkpoint["model"]
+        )
+
+        # Restore optimizer
+        self.optimizer.load_state_dict(
+            checkpoint["optimizer"]
+        )
+
+        # Restore scheduler
+        self.scheduler.load_state_dict(
+            checkpoint["scheduler"]
+        )
+
+        # Restore exploration state
+        self.epsilon = float(checkpoint["epsilon"])
+
+        # Keep model in training mode
+        self.model.train()
+
+        print(
+            f"Checkpoint loaded: episode={checkpoint['episode']}, "
+            f"global_step={checkpoint['global_step']}, "
+            f"epsilon={self.epsilon:.4f}"
+        )
+
+        return {
+            "episode": checkpoint["episode"],
+            "global_step": checkpoint["global_step"],
+            "best_reward": checkpoint["best_reward"],
+        }
