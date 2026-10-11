@@ -6,20 +6,19 @@ env:
   normalize: false
 
 network:
-  hidden_size: 256
+  hidden_size: 512
   save_model: true
 
 training:
   nb_episodes: 1000
-  total_timesteps: 500000
   learning_starts: 10000
   random_steps: 10000
   train_freq: 1
-  gradient_steps: 1
+  gradient_steps: 2
 
 evaluation:
-  nb_episodes: 10
-  nb_interval: 20
+  nb_episodes: 1
+  nb_interval: 40
 
 replay:
   capacity: 300000
@@ -27,7 +26,8 @@ replay:
 
 agent:
   actor_lr: 0.0003
-  critic_lr: 0.0003
-  gamma: 0.98
+  critic_lr: 0.0006
+  alpha_lr: 0.0006
+  gamma: 0.99
   tau: 0.005
   alpha: 0.2

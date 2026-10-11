@@ -51,7 +51,7 @@ class Trainer:
                 done = terminated or truncated
 
                 # Store the experience to the replay buffer
-                self.replay_buffer.push(state, action, reward, next_state, done)
+                self.replay_buffer.push(state, action, reward, next_state, terminated)
 
                 # Move to the next observation
                 state = next_state

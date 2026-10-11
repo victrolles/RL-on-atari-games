@@ -59,6 +59,7 @@ class LoggingConfig:
 class SACConfig:
     actor_lr: float = 3e-4
     critic_lr: float = 3e-4
+    alpha_lr: float = 3e-4
     gamma: float = 0.99
     tau: float = 0.005
     alpha: float = 0.2

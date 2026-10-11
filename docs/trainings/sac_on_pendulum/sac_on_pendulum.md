@@ -25,6 +25,8 @@
 
 ## The training
 
+Training time 1min55
+
 <table>
     <tr>
         <td align="center">

@@ -75,6 +75,22 @@ class SACAgent(Agent):
         #         critic_2_path=self.config.critic_2_model_path
         #     )
 
+        # Update alpha
+        self.log_alpha = torch.tensor(
+            np.log(config.agent.alpha),
+            dtype=torch.float32,
+            device=self.device,
+            requires_grad=True
+        )
+
+        self.target_entropy = -float(action_size)
+
+        self.alpha_optimizer = torch.optim.Adam(
+            [self.log_alpha],
+            lr=config.agent.alpha_lr
+        )
+
+
     def select_action(self, state: np.ndarray, deterministic: bool = False) -> np.ndarray:
 
         state_tensor = torch.as_tensor(
@@ -133,6 +149,10 @@ class SACAgent(Agent):
             device=self.device
         ).unsqueeze(1)
 
+        # Get the current alpha value from log_alpha
+
+        alpha = self.log_alpha.exp().detach()
+
         # ==================================
         # Critic target
         # ==================================
@@ -146,7 +166,7 @@ class SACAgent(Agent):
             minimum_target_q = torch.min(target_q1, target_q2)
 
             # SAC entropy term
-            soft_target_q = minimum_target_q - self.config.agent.alpha * next_log_probs
+            soft_target_q = minimum_target_q - alpha * next_log_probs
             target_q = rewards + self.config.agent.gamma * (1 - dones) * soft_target_q
 
         # ==================================
@@ -175,6 +195,11 @@ class SACAgent(Agent):
         # Train actor
         # ==================================
 
+        # We don't want to backpropagate through the critics when updating the actor, so we freeze their parameters.
+        # Freeze critic parameters
+        for critic in (self.critic_1, self.critic_2):
+            critic.requires_grad_(False)
+
         new_actions, log_probs = self.actor.sample(states)
 
         # Get the Q-values for the new actions from both critics
@@ -184,11 +209,15 @@ class SACAgent(Agent):
         # Get the minimum of the two Q-values for the new actions
         minimum_q = torch.min(q1_new_actions,q2_new_actions)
 
-        actor_loss = (self.config.agent.alpha * log_probs - minimum_q).mean()
+        actor_loss = (alpha * log_probs - minimum_q).mean()
 
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
+
+        # Unfreeze critics
+        for critic in (self.critic_1, self.critic_2):
+            critic.requires_grad_(True)
 
         # ==================================
         # Update target critics
@@ -196,6 +225,20 @@ class SACAgent(Agent):
 
         self.soft_update(self.critic_1, self.target_critic_1)
         self.soft_update(self.critic_2, self.target_critic_2)
+
+        # ==================================
+        # Update alpha
+        # ==================================
+
+        alpha_loss = -(self.log_alpha * (log_probs + self.target_entropy).detach()).mean()
+
+        self.alpha_optimizer.zero_grad()
+        alpha_loss.backward()
+        self.alpha_optimizer.step()
+
+        # ==================================
+        # Log metrics
+        # ==================================
 
         with torch.no_grad():
             _, log_std = self.actor(states)
@@ -205,6 +248,8 @@ class SACAgent(Agent):
             "actor_loss": actor_loss.item(),
             "critic_1_loss": critic_1_loss.item(),
             "critic_2_loss": critic_2_loss.item(),
+            "alpha_loss": alpha_loss.item(),
+            "alpha": self.log_alpha.exp().item(),
             # Q-value estimates
             "mean_q": minimum_q.mean().item(),
             # Policy exploration
