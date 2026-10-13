@@ -29,3 +29,15 @@ C:\Users\svetl\AppData\Local\Programs\Python\Python313\pythonw.exe -m venv .venv
 .venv313\Scripts\activate
 pip install -r requirements313.txt
 ```
+
+# Setup jupyter notebook
+
+Install python libraries
+```
+pip install jupyter ipykernel
+```
+
+Create the jupyter kernel
+```
+python -m ipykernel install --user --name rl-env --display-name "Python (RL Environment)"
+```

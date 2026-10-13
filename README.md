@@ -44,6 +44,7 @@
 python main.py --config configs/dqn_on_cartpole.yaml
 python main.py --config configs/sac_on_pendulum.yaml
 python main.py --config configs/sac_on_bipedalwalker.yaml
+python main.py --config configs/sac_on_mountaincarcontinuous.yaml
 ```
 ```
 python main.py --checkpoint runs\CartPole-v1\run_5567\checkpoints\best.pt --episodes 1500

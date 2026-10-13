@@ -9,3 +9,7 @@ tqdm
 torchview
 graphviz
 numpy
+
+# Run jupyter notebook
+jupyter
+ipykernel
