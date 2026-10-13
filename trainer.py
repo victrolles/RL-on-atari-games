@@ -34,7 +34,6 @@ class Trainer:
             done = False
             cumulated_reward = 0.0
             steps_per_episode = 0
-            metrics = {}
 
             # ==================================
             # Episode loop
@@ -72,10 +71,29 @@ class Trainer:
                         metrics = self.agent.update()
                         wandb.log(metrics)
 
-            # evaluate the agent
-            if (episode + 1) % self.config.evaluation.nb_interval == 0:
+            # ==================================
+            # Evalutation part
+            # ==================================
+            if (episode + 1) % self.config.training.evaluation_interval == 0:
+
+                # evaluate the agent
                 mean_reward = self.eval(episode + 1)
-                # checkpoint the best model
+
+                # logging the evaluation metrics
+                wandb.log({"Reward evaluation": mean_reward})
+
+                # Record the agent
+                self.record(episode + 1)
+
+                # Checkpoint the last model
+                self.agent.save_checkpoint(
+                    episode=episode,
+                    global_step=self.global_step,
+                    best_reward=cumulated_reward,
+                    filename="latest.pt"
+                )
+
+                # Checkpoint the best model
                 if mean_reward > self.best_reward:
                     self.best_reward = mean_reward
 
@@ -86,25 +104,22 @@ class Trainer:
                         filename="best.pt"
                     )
 
-            # checkpoint the agent
-            if (episode + 1) % self.config.logging.checkpoint_interval == 0:
-                self.agent.save_checkpoint(
-                    episode=episode,
-                    global_step=self.global_step,
-                    best_reward=cumulated_reward,
-                    filename="latest.pt"
-                )
+                # Save the lightweight model
+                self.agent.save_model(mean_reward)
+
+            # ==================================
+            # Log episode
+            # ==================================
         
             wandb.log({
                 "Steps total": self.global_step,
                 "Steps per episode": steps_per_episode,
-                "Reward training": cumulated_reward,
                 "Reward evaluation": mean_reward if (episode + 1) % self.config.evaluation.nb_interval == 0 else None,
                 "Buffer Size": len(self.replay_buffer)
             })
 
-    def eval(self, episode: int) -> float:
-            mean_reward = 0.0
+    def eval(self, episode: int = 20) -> float:
+            all_rewards = []
     
             for _ in range(self.config.evaluation.nb_episodes):
                 obs, _ = self.env.eval_env.reset()
@@ -123,12 +138,37 @@ class Trainer:
                     # Move to the next observation
                     obs = next_obs
     
-                mean_reward += cumulated_reward
-                self.env.eval_env.name_prefix=f"record_episode_{episode}_score_{cumulated_reward}"
-                path = Path(self.config.logging.run_dir)
-                path = Path.joinpath(path, "records")
-                self.env.eval_env.video_folder = path
-                print(f"Episode {episode}: Total Reward: {cumulated_reward}")
+                all_rewards.append(cumulated_reward)
+
+            mean_reward = sum(all_rewards) / len(all_rewards)   
+            print(f"Episode {episode} : Mean Reward: {mean_reward} / All Rewards: {all_rewards}")
     
-            mean_reward /= self.config.evaluation.nb_episodes
             return mean_reward
+
+    def record(self, episode: int = 3) -> None:
+                all_rewards = []
+
+                for _ in range(self.config.evaluation.nb_episodes):
+                    obs, _ = self.env.record_env.reset()
+                    done = False
+                    cumulated_reward = 0.0
+        
+                    while not done:
+                        # Select an action using the agent
+                        action = self.agent.select_action(obs, deterministic=True)
+        
+                        # Take a step in the environment
+                        next_obs, reward, terminated, truncated, _ = self.env.record_env.step(action)
+                        cumulated_reward += reward
+                        done = terminated or truncated
+        
+                        # Move to the next observation
+                        obs = next_obs
+        
+                    all_rewards.append(cumulated_reward)
+                    self.env.record_env.name_prefix=f"record_episode_{episode}_score_{cumulated_reward}"
+                    path = Path(self.config.logging.run_dir)
+                    path = Path.joinpath(path, "records")
+                    self.env.record_env.video_folder = path
+
+                print(f"Recorded episode {episode} : Rewards : {all_rewards}")

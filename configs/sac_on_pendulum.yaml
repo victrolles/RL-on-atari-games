@@ -15,10 +15,7 @@ training:
   random_steps: 1000
   train_freq: 5
   gradient_steps: 5
-
-evaluation:
-  nb_episodes: 1
-  nb_interval: 5
+  evaluation_interval: 5
 
 replay:
   capacity: 10000
@@ -31,6 +28,3 @@ agent:
   gamma: 0.99
   tau: 0.005
   alpha: 0.2
-
-logging:
-  checkpoint_interval: 10

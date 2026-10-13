@@ -39,7 +39,12 @@ def create_run_directory(config: RunConfig) -> Path:
 def create_agent(config: RunConfig, replay_buffer: ReplayBuffer, env: Environment):
     """Initialize the appropriate RL agent."""
 
-    state_size = env.train_env.observation_space.shape[0]
+    observation_shape = env.train_env.observation_space.shape
+
+    if len(observation_shape) == 3:
+        state_size = observation_shape   # (4, 84, 84)
+    else:
+        state_size = observation_shape[0]
 
     if config.algorithm == "sac":
         action_size = env.train_env.action_space.shape[0]

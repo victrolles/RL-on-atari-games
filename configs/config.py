@@ -30,10 +30,7 @@ class TrainingConfig:
     train_freq: int = 1
     gradient_steps: int = 1
 
-@dataclass
-class EvaluationConfig:
-    nb_episodes: int = 3
-    nb_interval: int = 100
+    evaluation_interval: int = 100
 
 @dataclass
 class ReplayConfig:
@@ -45,7 +42,6 @@ class ReplayConfig:
 class LoggingConfig:
     run_dir: str = "./runs"
     wandb_project: str = "atari-rl"
-    checkpoint_interval: int = 50
 
 
 # =====================================

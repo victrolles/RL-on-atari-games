@@ -6,6 +6,7 @@ import torch
 import torch.nn.functional as F
 
 from agents.sac.policy_network import PolicyNetwork
+from agents.sac.cnn_networks import CNNPolicyNetwork, CNNQNetwork
 from agents.sac.q_network import QNetwork
 from configs import SACRunConfig
 from replay_buffer import ReplayBuffer
@@ -13,32 +14,45 @@ from agents import Agent
 
 
 class SACAgent(Agent):
-    def __init__(self,
-                 config: SACRunConfig,
-                 replay_buffer: ReplayBuffer,
-                 state_size: int,
-                 action_size: int):
-
+    def __init__(
+        self,
+        config: SACRunConfig,
+        replay_buffer: ReplayBuffer,
+        state_size: int | tuple[int, int, int],
+        action_size: int
+    ):
         super().__init__(config, replay_buffer)
 
+        # Detect image observations
+        is_image = isinstance(state_size, tuple)
+
+        if is_image:
+            actor_class = CNNPolicyNetwork
+            critic_class = CNNQNetwork
+            input_kwargs = {"num_channels": state_size[0]}
+        else:
+            actor_class = PolicyNetwork
+            critic_class = QNetwork
+            input_kwargs = {"num_inputs": state_size}
+
         # Actor
-        self.actor = PolicyNetwork(
-            num_inputs=state_size,
+        self.actor = actor_class(
+            **input_kwargs,
             hidden_size=config.network.hidden_size,
             num_actions=action_size
         ).to(self.device)
 
         # Critics
-        self.critic_1 = QNetwork(
-            num_inputs=state_size,
-            num_actions=action_size,
-            hidden_size=config.network.hidden_size
+        self.critic_1 = critic_class(
+            **input_kwargs,
+            hidden_size=config.network.hidden_size,
+            num_actions=action_size
         ).to(self.device)
 
-        self.critic_2 = QNetwork(
-            num_inputs=state_size,
-            num_actions=action_size,
-            hidden_size=config.network.hidden_size
+        self.critic_2 = critic_class(
+            **input_kwargs,
+            hidden_size=config.network.hidden_size,
+            num_actions=action_size
         ).to(self.device)
 
         # ----------------------------------
@@ -67,13 +81,6 @@ class SACAgent(Agent):
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=config.agent.actor_lr)
         self.critic_1_optimizer = torch.optim.Adam(self.critic_1.parameters(), lr=config.agent.critic_lr)
         self.critic_2_optimizer = torch.optim.Adam(self.critic_2.parameters(), lr=config.agent.critic_lr)
-
-        # if self.config.network.load_model:
-        #     self.load_model(
-        #         actor_path=self.config.actor_model_path,
-        #         critic_1_path=self.config.critic_1_model_path,
-        #         critic_2_path=self.config.critic_2_model_path
-        #     )
 
         # Update alpha
         self.log_alpha = torch.tensor(
@@ -258,6 +265,11 @@ class SACAgent(Agent):
             "log_prob": log_probs.mean().item()
         }
 
+    # Checkpointing is used to save the entire training state :
+    # - Training progress (episode, global step, best reward)
+    # - Model weights
+    # - Optimizer states
+    # - Training progress
     def save_checkpoint(
         self,
         episode: int,
@@ -308,6 +320,20 @@ class SACAgent(Agent):
         temporary_path.replace(path)
 
         print(f"Checkpoint saved: {path}")
+
+    # Save the model weights only (without optimizer states or training progress)
+    def save_model(self, reward: float):
+        
+        # Create the model directory if it doesn't exist
+        model_dir = Path(self.config.logging.run_dir) / "models"
+        model_dir.mkdir(parents=True, exist_ok=True)
+
+        # Save the model weights
+        model_path = model_dir / f"model_{reward:.2f}.pt"
+        torch.save(self.actor.state_dict(), model_path)
+
+        print(f"Model saved: {model_path}")
+
 
     def load_checkpoint(self, checkpoint_path: str) -> dict:
 

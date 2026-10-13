@@ -16,8 +16,8 @@ class ReplayBuffer:
 
         states, actions, rewards, next_states, dones = zip(*batch)
 
-        states = np.asarray(states, dtype=np.float32)
-        actions = np.asarray(actions, dtype=np.float32)
+        states = np.stack(states)
+        next_states = np.stack(next_states)
         rewards = np.asarray(rewards, dtype=np.float32)
         next_states = np.asarray(next_states, dtype=np.float32)
         dones = np.asarray(dones, dtype=np.float32)

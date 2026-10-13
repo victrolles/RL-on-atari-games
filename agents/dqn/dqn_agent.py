@@ -139,6 +139,19 @@ class DQNAgent(BaseAgent):
 
         print(f"Checkpoint saved: {path}")
 
+    # Save the model weights only (without optimizer states or training progress)
+    def save_model(self, reward: float):
+        
+        # Create the model directory if it doesn't exist
+        model_dir = Path(self.config.logging.run_dir) / "models"
+        model_dir.mkdir(parents=True, exist_ok=True)
+
+        # Save the model weights
+        model_path = model_dir / f"model_{reward:.2f}.pt"
+        torch.save(self.model.state_dict(), model_path)
+
+        print(f"Model saved: {model_path}")
+
 
     def load_checkpoint(self, checkpoint_path: str | Path) -> dict:
         checkpoint_path = Path(checkpoint_path)

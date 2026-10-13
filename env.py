@@ -2,40 +2,54 @@
 from pathlib import Path
 
 import gymnasium as gym
-from gymnasium.wrappers import RecordVideo, RescaleAction
+from gymnasium.wrappers import (
+    RecordVideo,
+    RescaleAction,
+    GrayscaleObservation,
+    ResizeObservation,
+    FrameStackObservation,
+)
 
 from configs import RunConfig
+
 
 class Environment:
     def __init__(self, config: RunConfig):
 
-        # Training environment (no rendering)
-        self.train_env = gym.make(config.env.name, render_mode="rgb_array")
-
-        # Evaluation environment (supports video)
-        eval_env = gym.make(config.env.name, render_mode="rgb_array")
-
-        # Normalize action space to [-1, 1]
-        if config.env.normalize:
-            self.train_env = RescaleAction(
-                self.train_env,
-                min_action=-1.0,
-                max_action=1.0
+        def create_env():
+            env = gym.make(
+                config.env.name,
+                render_mode="rgb_array"
             )
 
-            eval_env = RescaleAction(
-                eval_env,
-                min_action=-1.0,
-                max_action=1.0
-            )
+            # Preprocessing for image observations
+            if config.env.name == "CarRacing-v3":
+                env = GrayscaleObservation(env, keep_dim=False)
+                env = ResizeObservation(env, shape=(84, 84))
+                env = FrameStackObservation(env, stack_size=4)
 
-        # Video recordings
+            # Normalize actions to [-1, 1]
+            if config.env.normalize:
+                env = RescaleAction(
+                    env,
+                    min_action=-1.0,
+                    max_action=1.0
+                )
+
+            return env
+
+        self.train_env = create_env()
+        self.eval_env = create_env()
+        record_env = create_env()
+        
+
+        # Video recording
         record_path = Path(config.logging.run_dir) / "records"
         record_path.mkdir(parents=True, exist_ok=True)
 
-        self.eval_env = RecordVideo(
-            eval_env,
+        self.record_env = RecordVideo(
+            record_env,
             video_folder=str(record_path),
-            name_prefix="eval",
+            name_prefix="record",
             episode_trigger=lambda episode_id: True
         )

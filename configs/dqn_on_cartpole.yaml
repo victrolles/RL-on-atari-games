@@ -13,10 +13,7 @@ training:
   random_steps: 10000
   train_freq: 40
   gradient_steps: 2
-
-evaluation:
-  nb_episodes: 3
-  nb_interval: 100
+  evaluation_interval: 100
 
 replay:
   capacity: 1000

@@ -36,3 +36,11 @@ class BaseAgent(ABC):
     @abstractmethod
     def load_checkpoint(self, filename: str):
         pass
+
+    @abstractmethod
+    def save_model(self, reward: float):
+        pass
+
+    @abstractmethod
+    def load_model(self, filename: str):
+        pass
