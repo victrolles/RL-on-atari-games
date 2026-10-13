@@ -80,7 +80,6 @@ class BaseConfig:
     env: EnvConfig = field(default_factory=EnvConfig)
     network: NetworkConfig = field(default_factory=NetworkConfig)
     training: TrainingConfig = field(default_factory=TrainingConfig)
-    evaluation: EvaluationConfig = field(default_factory=EvaluationConfig)
     replay: ReplayConfig = field(default_factory=ReplayConfig)
     logging: LoggingConfig = field(default_factory=LoggingConfig)
 

@@ -86,22 +86,23 @@ class Trainer:
                 self.record(episode + 1)
 
                 # Checkpoint the last model
+                filename = f"lastest_checkpoint_episode_{episode + 1}_reward_{mean_reward:.2f}.pt"
                 self.agent.save_checkpoint(
                     episode=episode,
                     global_step=self.global_step,
-                    best_reward=cumulated_reward,
-                    filename="latest.pt"
+                    best_reward=mean_reward,
+                    filename=filename
                 )
 
                 # Checkpoint the best model
                 if mean_reward > self.best_reward:
                     self.best_reward = mean_reward
-
+                    filename = f"best_checkpoint_episode_{episode + 1}_reward_{mean_reward:.2f}.pt"
                     self.agent.save_checkpoint(
                         episode=episode,
                         global_step=self.global_step,
-                        best_reward=self.best_reward,
-                        filename="best.pt"
+                        best_reward=mean_reward,
+                        filename=filename
                     )
 
                 # Save the lightweight model
@@ -114,14 +115,14 @@ class Trainer:
             wandb.log({
                 "Steps total": self.global_step,
                 "Steps per episode": steps_per_episode,
-                "Reward evaluation": mean_reward if (episode + 1) % self.config.evaluation.nb_interval == 0 else None,
+                "Reward training": cumulated_reward,
                 "Buffer Size": len(self.replay_buffer)
             })
 
-    def eval(self, episode: int = 20) -> float:
+    def eval(self, episode: int, nb_evalutations: int = 20) -> float:
             all_rewards = []
     
-            for _ in range(self.config.evaluation.nb_episodes):
+            for _ in range(nb_evalutations):
                 obs, _ = self.env.eval_env.reset()
                 done = False
                 cumulated_reward = 0.0
@@ -145,10 +146,10 @@ class Trainer:
     
             return mean_reward
 
-    def record(self, episode: int = 3) -> None:
+    def record(self, episode: int, nb_recordings: int = 3) -> None:
                 all_rewards = []
 
-                for _ in range(self.config.evaluation.nb_episodes):
+                for _ in range(nb_recordings):
                     obs, _ = self.env.record_env.reset()
                     done = False
                     cumulated_reward = 0.0
