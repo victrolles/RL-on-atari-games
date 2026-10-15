@@ -86,23 +86,21 @@ class Trainer:
                 self.record(episode + 1)
 
                 # Checkpoint the last model
-                filename = f"lastest_checkpoint_episode_{episode + 1}_reward_{mean_reward:.2f}.pt"
                 self.agent.save_checkpoint(
                     episode=episode,
                     global_step=self.global_step,
                     best_reward=mean_reward,
-                    filename=filename
+                    filename="latest.pt"
                 )
 
                 # Checkpoint the best model
                 if mean_reward > self.best_reward:
                     self.best_reward = mean_reward
-                    filename = f"best_checkpoint_episode_{episode + 1}_reward_{mean_reward:.2f}.pt"
                     self.agent.save_checkpoint(
                         episode=episode,
                         global_step=self.global_step,
                         best_reward=mean_reward,
-                        filename=filename
+                        filename="best.pt"
                     )
 
                 # Save the lightweight model
@@ -139,10 +137,14 @@ class Trainer:
                     # Move to the next observation
                     obs = next_obs
     
-                all_rewards.append(cumulated_reward)
+                all_rewards.append(float(cumulated_reward))
 
             mean_reward = sum(all_rewards) / len(all_rewards)   
-            print(f"Episode {episode} : Mean Reward: {mean_reward} / All Rewards: {all_rewards}")
+            print(
+                f"Episode {episode} : "
+                f"Mean Reward: {mean_reward:.2f} / "
+                f"All Rewards: {[round(r, 2) for r in all_rewards]}"
+            )
     
             return mean_reward
 
@@ -166,10 +168,10 @@ class Trainer:
                         # Move to the next observation
                         obs = next_obs
         
-                    all_rewards.append(cumulated_reward)
-                    self.env.record_env.name_prefix=f"record_episode_{episode}_score_{cumulated_reward}"
+                    all_rewards.append(float(cumulated_reward))
+                    self.env.record_env.name_prefix=f"record_episode_{episode}_score_{cumulated_reward:.2f}"
                     path = Path(self.config.logging.run_dir)
                     path = Path.joinpath(path, "records")
                     self.env.record_env.video_folder = path
 
-                print(f"Recorded episode {episode} : Rewards : {all_rewards}")
+                print(f"Recorded episode {episode} : Rewards : {[round(r, 2) for r in all_rewards]}")

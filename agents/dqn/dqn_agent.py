@@ -147,7 +147,7 @@ class DQNAgent(BaseAgent):
         model_dir.mkdir(parents=True, exist_ok=True)
 
         # Save the model weights
-        model_path = model_dir / f"model_{reward:.2f}.pt"
+        model_path = model_dir / f"model_reward_{reward:.2f}.pt"
         torch.save(self.model.state_dict(), model_path)
 
         print(f"Model saved: {model_path}")
@@ -196,3 +196,6 @@ class DQNAgent(BaseAgent):
             "global_step": checkpoint["global_step"],
             "best_reward": checkpoint["best_reward"],
         }
+
+    def load_model(self, model_path: str):
+        pass

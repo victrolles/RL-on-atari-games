@@ -135,7 +135,7 @@ def load_config(path: str | Path) -> RunConfig:
     config = config_classes[algorithm]()
 
     sections = (
-        "env", "network", "training", "evaluation",
+        "env", "network", "training",
         "replay", "logging", "agent"
     )
 

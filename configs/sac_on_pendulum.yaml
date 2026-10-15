@@ -10,12 +10,12 @@ network:
   hidden_size: 64
 
 training:
-  nb_episodes: 100
+  nb_episodes: 40
   learning_starts: 1000
   random_steps: 1000
   train_freq: 5
   gradient_steps: 5
-  evaluation_interval: 5
+  evaluation_interval: 10
 
 replay:
   capacity: 10000

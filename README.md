@@ -43,6 +43,7 @@
 ```
 python main.py --config configs/dqn_on_cartpole.yaml
 python main.py --config configs/sac_on_pendulum.yaml
+python main.py --config configs/sac_on_carracing.yaml
 python main.py --config configs/sac_on_bipedalwalker.yaml
 python main.py --config configs/sac_on_mountaincarcontinuous.yaml
 ```
