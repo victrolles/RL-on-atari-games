@@ -104,7 +104,7 @@ class Trainer:
                     )
 
                 # Save the lightweight model
-                self.agent.save_model(mean_reward)
+                self.agent.save_model(episode + 1, mean_reward)
 
             # ==================================
             # Log episode

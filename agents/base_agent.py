@@ -8,10 +8,14 @@ import torch
 class BaseAgent(ABC):
     def __init__(self,
                  config: RunConfig,
-                 replay_buffer: ReplayBuffer):
+                 replay_buffer: ReplayBuffer,
+                 state_size: int | tuple[int, int, int],
+                 action_size: int):
         
         self.config = config
         self.replay_buffer = replay_buffer
+        self.state_size = state_size
+        self.action_size = action_size
 
         # Device
         if config.env.device == "cuda" and torch.cuda.is_available():
@@ -38,7 +42,7 @@ class BaseAgent(ABC):
         pass
 
     @abstractmethod
-    def save_model(self, reward: float):
+    def save_model(self, episode: int, reward: float):
         pass
 
     @abstractmethod

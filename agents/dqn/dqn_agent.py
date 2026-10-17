@@ -17,7 +17,7 @@ class DQNAgent(BaseAgent):
                  state_size: int,
                  action_size: int):
 
-        super().__init__(config, replay_buffer)
+        super().__init__(config, replay_buffer, state_size, action_size)
 
         self.model = DQN(state_size, config.network.hidden_size, action_size).to(self.device)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config.agent.learning_rate)
@@ -140,14 +140,14 @@ class DQNAgent(BaseAgent):
         print(f"Checkpoint saved: {path}")
 
     # Save the model weights only (without optimizer states or training progress)
-    def save_model(self, reward: float):
+    def save_model(self, episode: int, reward: float):
         
         # Create the model directory if it doesn't exist
         model_dir = Path(self.config.logging.run_dir) / "models"
         model_dir.mkdir(parents=True, exist_ok=True)
 
         # Save the model weights
-        model_path = model_dir / f"model_reward_{reward:.2f}.pt"
+        model_path = model_dir / f"model_episode_{episode}_reward_{reward:.2f}.pt"
         torch.save(self.model.state_dict(), model_path)
 
         print(f"Model saved: {model_path}")
