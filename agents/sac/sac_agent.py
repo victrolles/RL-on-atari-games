@@ -330,7 +330,6 @@ class SACAgent(Agent):
 
         # Save the model weights
         model_path = model_dir / f"model_episode_{episode}_reward_{reward:.2f}.pt"
-        torch.save(self.actor.state_dict(), model_path)
         torch.save({
             "env_name": self.config.env.name,
             "algorithm": self.config.algorithm,
@@ -343,7 +342,6 @@ class SACAgent(Agent):
         }, model_path)
 
         print(f"Model saved: {model_path}")
-
 
     def load_checkpoint(self, checkpoint_path: str) -> dict:
 
@@ -395,7 +393,9 @@ class SACAgent(Agent):
         }
 
     def load_model(self, model_path: str):
-        pass
+        model = torch.load(model_path, map_location=self.device)
+        self.actor.load_state_dict(model["model_state_dict"])
+        print(f"Model loaded: {model_path}")
 
     def soft_update(
         self,

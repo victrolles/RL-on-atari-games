@@ -148,10 +148,18 @@ class DQNAgent(BaseAgent):
 
         # Save the model weights
         model_path = model_dir / f"model_episode_{episode}_reward_{reward:.2f}.pt"
-        torch.save(self.model.state_dict(), model_path)
+        torch.save({
+            "env_name": self.config.env.name,
+            "algorithm": self.config.algorithm,
+            "state_size": self.state_size,
+            "action_size": int(self.action_size),
+            "hidden_size": self.config.network.hidden_size,
+            "normalize": self.config.env.normalize,
+            "reward": reward,
+            "model_state_dict": self.model.state_dict(),
+        }, model_path)
 
         print(f"Model saved: {model_path}")
-
 
     def load_checkpoint(self, checkpoint_path: str | Path) -> dict:
         checkpoint_path = Path(checkpoint_path)
@@ -198,4 +206,6 @@ class DQNAgent(BaseAgent):
         }
 
     def load_model(self, model_path: str):
-        pass
+        model = torch.load(model_path, map_location=self.device)
+        self.model.load_state_dict(model["model_state_dict"])
+        print(f"Model loaded: {model_path}")
