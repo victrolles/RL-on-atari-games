@@ -1,0 +1,107 @@
+{
+  "snapshot_date": "2026-11-05",
+  "description": "Latest locally available W&B summaries; historical GIFs and SVG exports are not guaranteed to belong to these runs.",
+  "runs": [
+    {
+      "environment": "BipedalWalker-v3",
+      "run_directory": "runs/BipedalWalker-v3/run_3025",
+      "wandb_run_id": "yqzyzht5",
+      "summary_source": "runs/BipedalWalker-v3/run_3025/wandb/run-20261017_224230-yqzyzht5/files/wandb-summary.json",
+      "metadata_source": "runs/BipedalWalker-v3/run_3025/wandb/run-20261017_224230-yqzyzht5/files/wandb-metadata.json",
+      "started_at_utc": "2026-10-17T20:42:30.026134Z",
+      "runtime_seconds": 34432,
+      "metrics": {
+        "Reward evaluation": 334.415510559082,
+        "Reward training": 332.3071594238281,
+        "Steps total": 1197187,
+        "Steps per episode": 666,
+        "Buffer Size": 300000,
+        "actor_loss": -20.36722183227539,
+        "critic_1_loss": 0.10222476720809937,
+        "critic_2_loss": 0.11907873302698135,
+        "alpha": 0.010580063797533512
+      },
+      "hardware": {
+        "os": "Windows-11-10.0.26300-SP0",
+        "python": "CPython 3.13.16",
+        "gpu": "NVIDIA GeForce GTX 1650",
+        "gpu_memory_bytes": 4294967296
+      }
+    },
+    {
+      "environment": "CarRacing-v3",
+      "run_directory": "runs/CarRacing-v3/run_8544",
+      "wandb_run_id": "w5q1kcxw",
+      "summary_source": "runs/CarRacing-v3/run_8544/wandb/run-20261018_222309-w5q1kcxw/files/wandb-summary.json",
+      "metadata_source": "runs/CarRacing-v3/run_8544/wandb/run-20261018_222309-w5q1kcxw/files/wandb-metadata.json",
+      "started_at_utc": "2026-10-18T20:23:09.934342Z",
+      "runtime_seconds": 105524,
+      "metrics": {
+        "Reward evaluation": 311.47116567494635,
+        "Reward training": 175.1677852349041,
+        "Steps total": 999443,
+        "Steps per episode": 1000,
+        "Buffer Size": 50000,
+        "actor_loss": -11.248455047607422,
+        "critic_1_loss": 1.390532374382019,
+        "critic_2_loss": 2.160949230194092,
+        "alpha": 0.011686836369335651
+      },
+      "hardware": {
+        "os": "Windows-11-10.0.26300-SP0",
+        "python": "CPython 3.13.16",
+        "gpu": "NVIDIA GeForce GTX 1650",
+        "gpu_memory_bytes": 4294967296
+      }
+    },
+    {
+      "environment": "CartPole-v1",
+      "run_directory": "runs/CartPole-v1/run_7834",
+      "wandb_run_id": "gfulc9v8",
+      "summary_source": "runs/CartPole-v1/run_7834/wandb/run-20261017_214749-gfulc9v8/files/wandb-summary.json",
+      "metadata_source": "runs/CartPole-v1/run_7834/wandb/run-20261017_214749-gfulc9v8/files/wandb-metadata.json",
+      "started_at_utc": "2026-10-17T19:47:49.036109Z",
+      "runtime_seconds": 267,
+      "metrics": {
+        "Reward evaluation": 500,
+        "Reward training": 500,
+        "Steps total": 305540,
+        "Steps per episode": 500,
+        "Buffer Size": 1000,
+        "loss": 0.009207848459482193
+      },
+      "hardware": {
+        "os": "Windows-11-10.0.26300-SP0",
+        "python": "CPython 3.13.16",
+        "gpu": "NVIDIA GeForce GTX 1650",
+        "gpu_memory_bytes": 4294967296
+      }
+    },
+    {
+      "environment": "Pendulum-v1",
+      "run_directory": "runs/Pendulum-v1/run_4248",
+      "wandb_run_id": "lwta13av",
+      "summary_source": "runs/Pendulum-v1/run_4248/wandb/run-20261016_215140-lwta13av/files/wandb-summary.json",
+      "metadata_source": "runs/Pendulum-v1/run_4248/wandb/run-20261016_215140-lwta13av/files/wandb-metadata.json",
+      "started_at_utc": "2026-10-16T19:51:40.046157Z",
+      "runtime_seconds": 110,
+      "metrics": {
+        "Reward evaluation": -148.8057936713097,
+        "Reward training": -287.99200639788745,
+        "Steps total": 8000,
+        "Steps per episode": 200,
+        "Buffer Size": 8000,
+        "actor_loss": 59.64091110229492,
+        "critic_1_loss": 4.863807678222656,
+        "critic_2_loss": 5.873856544494629,
+        "alpha": 0.14562323689460754
+      },
+      "hardware": {
+        "os": "Windows-11-10.0.26300-SP0",
+        "python": "CPython 3.13.16",
+        "gpu": "NVIDIA GeForce GTX 1650",
+        "gpu_memory_bytes": 4294967296
+      }
+    }
+  ]
+}
