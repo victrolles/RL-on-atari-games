@@ -1,91 +1,91 @@
 # CartPole — DQN
 
-[← README](../../../README.md) · [Résultats et protocole](../README.md) · [Installation](../../setup.md)
+[← README](../../../README.md) · [Results and protocol](../README.md) · [Setup](../../setup.md)
 
-Maintenir un pendule vertical en déplaçant son chariot vers la gauche ou la droite. Cette tâche à actions discrètes sert de première expérience pour le DQN. L'environnement fournit quatre observations et deux actions possibles ; un épisode de `CartPole-v1` est limité à 500 pas dans sa configuration standard. [Description Gymnasium](https://gymnasium.farama.org/environments/classic_control/cart_pole/).
+Keep a pole upright by moving its cart left or right. This task with discrete actions serves as an introductory DQN experiment. The environment provides four observations and two possible actions; a `CartPole-v1` episode is limited to 500 steps in its standard configuration. [Gymnasium description](https://gymnasium.farama.org/environments/classic_control/cart_pole/).
 
-## Avant / après
+## Before / after
 
 <table>
-  <tr><th align="center">Enregistrement initial</th><th align="center">Après entraînement</th></tr>
+  <tr><th align="center">Initial recording</th><th align="center">After training</th></tr>
   <tr>
-    <td align="center"><img src="record_1.gif" alt="CartPole : enregistrement initial" width="400"></td>
-    <td align="center"><img src="record_2.gif" alt="CartPole : agent entraîné" width="400"></td>
+    <td align="center"><img src="record_1.gif" alt="CartPole: initial recording" width="400"></td>
+    <td align="center"><img src="record_2.gif" alt="CartPole: trained agent" width="400"></td>
   </tr>
 </table>
 
-## Résultats et durée
+## Results and runtime
 
-| Indicateur | Valeur |
+| Metric | Value |
 | :--- | :--- |
-| Temps à prévoir | Quelques minutes, environ 2 à 5 min sur la machine de référence |
-| Durée notée dans la documentation historique | 2 min 39 s |
-| Durée du résumé W&B local | 4 min 27 s |
-| Dernière moyenne d'évaluation du résumé local | 500,00 |
-| Interactions cumulées du résumé local | 305 540 |
-| Essai local | `run_7834` · W&B `gfulc9v8` |
-| Matériel de référence | NVIDIA GeForce GTX 1650 · 4 Go |
+| Expected runtime | A few minutes, roughly 2–5 min on the reference machine |
+| Runtime noted in historical documentation | 2 min 39 s |
+| Runtime from the local W&B summary | 4 min 27 s |
+| Latest mean evaluation reward from the local summary | 500.00 |
+| Total interactions from the local summary | 305,540 |
+| Local run | `run_7834` · W&B `gfulc9v8` |
+| Reference hardware | NVIDIA GeForce GTX 1650 · 4 GB |
 
-La dernière moyenne relevée atteint le plafond de durée de l'environnement. Elle décrit cette évaluation précise et ne mesure pas la stabilité entre plusieurs entraînements. Les durées historiques et locales proviennent de relevés différents ; les [sources archivées](../results.json) et le [protocole de lecture](../README.md) précisent cette distinction.
+The latest recorded mean reaches the environment's episode duration limit. It describes that specific evaluation and does not measure stability across training runs. Historical and local runtimes come from different records; the [archived sources](../results.json) and [interpretation guidelines](../README.md) explain this distinction.
 
-## Méthode et technologies
+## Method and technologies
 
-- **PyTorch** : réseau dense à deux couches cachées et activations ReLU pour estimer les Q-valeurs.
-- **DQN** : apprentissage sur un replay buffer et exploration **epsilon-greedy** après la phase initiale d'actions aléatoires.
-- **Adam** et **MSE** : optimisation de l'écart entre la Q-valeur choisie et sa cible de différence temporelle.
-- **CosineAnnealingWarmRestarts** : variation cyclique du taux d'apprentissage ; voir la [note technique](../../technologies/lr_scheduler.md).
-- **Gymnasium**, **W&B** et **RecordVideo** : simulation, suivi des métriques et enregistrement des évaluations.
+- **PyTorch**: a fully connected network with two hidden layers and ReLU activations to estimate Q-values.
+- **DQN**: learning from a replay buffer and **epsilon-greedy** exploration after the initial random-action phase.
+- **Adam** and **MSE**: optimizing the difference between the selected Q-value and its temporal-difference target.
+- **CosineAnnealingWarmRestarts**: cyclic learning rate changes; see the [technical note](../../technologies/lr_scheduler.md).
+- **Gymnasium**, **W&B**, and **RecordVideo**: simulation, metric tracking, and evaluation recording.
 
-Dans cette implémentation, les cibles DQN sont calculées avec le même réseau que les Q-valeurs courantes ; il n'y a pas de réseau cible distinct. Le [schéma de réseau historique](architecture_model.png) reste disponible à titre illustratif.
+In this implementation, DQN targets are computed using the same network as the current Q-values; there is no separate target network. The [historical network diagram](architecture_model.png) remains available as an illustration.
 
-## Courbes et analyse
+## Charts and analysis
 
-### Récompenses
-
-<table>
-  <tr><th align="center">Récompense d'entraînement</th><th align="center">Récompense d'évaluation</th></tr>
-  <tr><td align="center"><img src="chart_training_reward.svg" alt="Récompense d'entraînement" width="400"></td><td align="center"><img src="chart_eval_reward.svg" alt="Récompense d'évaluation" width="400"></td></tr>
-</table>
-
-La récompense d'entraînement augmente progressivement, d'une vingtaine à environ 260 sur l'export. L'évaluation progresse également, avec plusieurs reculs intermédiaires, avant d'atteindre 500 au dernier point. L'écart entre les deux courbes est compatible avec une politique encore exploratoire pendant l'entraînement et une sélection déterministe en évaluation. Il ne permet pas, à lui seul, de mesurer la variance de l'agent.
-
-### Exploration et erreur de valeur
+### Rewards
 
 <table>
-  <tr><th align="center">Exploration epsilon-greedy</th><th align="center">Perte MSE du réseau Q</th></tr>
-  <tr><td align="center"><img src="chart_epsilon.svg" alt="Exploration epsilon-greedy" width="400"></td><td align="center"><img src="chart_loss.svg" alt="Perte MSE du réseau Q" width="400"></td></tr>
+  <tr><th align="center">Training reward</th><th align="center">Evaluation reward</th></tr>
+  <tr><td align="center"><img src="chart_training_reward.svg" alt="Training reward" width="400"></td><td align="center"><img src="chart_eval_reward.svg" alt="Evaluation reward" width="400"></td></tr>
 </table>
 
-L'epsilon décroît régulièrement d'environ 1 à 0,3 : le minimum de 0,01 n'est pas atteint sur la portion exportée. L'agent continue donc à essayer des actions aléatoires pendant une part importante de l'entraînement.
+Training reward gradually increases from around 20 to about 260 in the export. Evaluation also improves, with several intermediate setbacks, before reaching 500 at the final point. The gap between the two curves is consistent with a policy that still explores during training and uses deterministic action selection during evaluation. It does not, by itself, measure the agent's variance.
 
-La perte présente une forte phase d'instabilité, avec des pics de l'ordre de `5 × 10⁸`, puis revient à une échelle beaucoup plus faible. La progression des récompenses indique un apprentissage utile sur cet essai, mais ces pics justifient de surveiller les estimations de valeur et de comparer plusieurs exécutions. L'export seul ne permet pas d'attribuer cette instabilité à un hyperparamètre précis.
+### Exploration and value estimation error
 
-Ces figures sont historiques ; l'axe `Step` ne doit pas être interprété automatiquement comme un nombre d'épisodes. La courbe epsilon n'est plus journalisée par l'agent DQN actuel.
+<table>
+  <tr><th align="center">Epsilon-greedy exploration</th><th align="center">Q-network MSE loss</th></tr>
+  <tr><td align="center"><img src="chart_epsilon.svg" alt="Epsilon-greedy exploration" width="400"></td><td align="center"><img src="chart_loss.svg" alt="Q-network MSE loss" width="400"></td></tr>
+</table>
 
-## Reproduire l'expérience
+Epsilon steadily decreases from about 1 to 0.3: the minimum of 0.01 is not reached in the exported segment. The agent therefore continues trying random actions for a substantial part of training.
 
-Depuis la racine du dépôt, après le [setup](../../setup.md) :
+The loss shows a period of severe instability, with spikes on the order of `5 × 10⁸`, before returning to a much smaller scale. The improvement in rewards indicates useful learning in this run, but these spikes warrant monitoring value estimates and comparing multiple runs. The export alone cannot attribute this instability to a specific hyperparameter.
+
+These figures are historical; the `Step` axis should not automatically be interpreted as an episode count. The current DQN agent no longer logs the epsilon curve.
+
+## Reproduce the experiment
+
+From the repository root, after [setup](../../setup.md):
 
 ```powershell
 python main.py --config configs/dqn_on_cartpole.yaml
 ```
 
-## Hyperparamètres
+## Hyperparameters
 
-Valeurs de la [configuration actuelle](../../../configs/dqn_on_cartpole.yaml), complétées par les défauts de [`configs/config.py`](../../../configs/config.py). Elles décrivent le lancement proposé, sans garantir les réglages des courbes historiques.
+Values from the [current configuration](../../../configs/dqn_on_cartpole.yaml), supplemented by the defaults in [`configs/config.py`](../../../configs/config.py). They describe the suggested run and do not guarantee the settings used for the historical charts.
 
-### Environnement et réseau
+### Environment and network
 
-| Paramètre | Valeur |
+| Parameter | Value |
 | :--- | :--- |
 | `env.name` | `CartPole-v1` |
 | `env.device` | `cuda` |
 | `env.normalize` | `false` |
 | `network.hidden_size` | `64` |
 
-### Entraînement et replay buffer
+### Training and replay buffer
 
-| Paramètre | Valeur |
+| Parameter | Value |
 | :--- | :--- |
 | `training.nb_episodes` | `10000` |
 | `training.learning_starts` | `10000` |
@@ -96,11 +96,11 @@ Valeurs de la [configuration actuelle](../../../configs/dqn_on_cartpole.yaml), c
 | `replay.capacity` | `1000` |
 | `replay.batch_size` | `64` |
 
-`learning_starts`, `random_steps` et `train_freq` sont exprimés en interactions avec l'environnement. `gradient_steps` est le nombre de mises à jour par déclenchement ; `evaluation_interval` est exprimé en épisodes.
+`learning_starts`, `random_steps`, and `train_freq` are measured in environment interactions. `gradient_steps` is the number of updates per trigger; `evaluation_interval` is measured in episodes.
 
-### Optimisation
+### Optimization
 
-| Paramètre | Valeur |
+| Parameter | Value |
 | :--- | :--- |
 | `agent.learning_rate` | `0.01` |
 | `agent.gamma` | `0.99` |
@@ -108,6 +108,6 @@ Valeurs de la [configuration actuelle](../../../configs/dqn_on_cartpole.yaml), c
 | `agent.epsilon_decay` | `0.999` |
 | `agent.epsilon_min` | `0.01` |
 
-L'epsilon est multiplié par `epsilon_decay` à chaque mise à jour de l'agent, jusqu'à `epsilon_min`. Le scheduler utilise `T_0=50`, `T_mult=1` et `eta_min=0` ; il avance à chaque mise à jour. Ces réglages du scheduler restent définis dans le code.
+Epsilon is multiplied by `epsilon_decay` at each agent update, down to `epsilon_min`. The scheduler uses `T_0=50`, `T_mult=1`, and `eta_min=0`; it advances at each update. These scheduler settings remain defined in the code.
 
-Le suivi utilise le projet W&B `atari-rl` et crée les sorties sous `runs/` par défaut. Les évaluations comprennent **20 épisodes déterministes**, puis **3 épisodes enregistrés**, selon le [protocole commun](../README.md#protocole-du-code-actuel).
+Tracking uses the W&B project `atari-rl` and creates outputs under `runs/` by default. Evaluations consist of **20 deterministic episodes**, followed by **3 recorded episodes**, according to the [shared protocol](../README.md#current-training-protocol).

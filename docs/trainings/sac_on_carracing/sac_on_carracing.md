@@ -1,102 +1,102 @@
-# CarRacing — Soft Actor-Critic avec CNN
+# CarRacing — Soft Actor-Critic with CNNs
 
-[← README](../../../README.md) · [Résultats et protocole](../README.md) · [Installation](../../setup.md)
+[← README](../../../README.md) · [Results and protocol](../README.md) · [Setup](../../setup.md)
 
-Apprendre à conduire à partir des images du circuit en contrôlant la direction, l'accélération et le freinage. `CarRacing-v3` fournit des images RGB de `96 × 96` pixels et utilise ici son espace d'actions continu. Les circuits sont générés à chaque réinitialisation. [Description Gymnasium](https://gymnasium.farama.org/environments/box2d/car_racing/).
+Learn to drive from track images by controlling steering, throttle, and braking. `CarRacing-v3` provides `96 × 96` RGB images and uses its continuous action space here. Tracks are generated at each reset. [Gymnasium description](https://gymnasium.farama.org/environments/box2d/car_racing/).
 
-## Avant / après
+## Before / after
 
 <table>
-  <tr><th align="center">Enregistrement initial</th><th align="center">Après entraînement</th></tr>
+  <tr><th align="center">Initial recording</th><th align="center">After training</th></tr>
   <tr>
-    <td align="center"><img src="record_1.gif" alt="CarRacing : enregistrement initial" width="400"></td>
-    <td align="center"><img src="record_2.gif" alt="CarRacing : agent entraîné" width="400"></td>
+    <td align="center"><img src="record_1.gif" alt="CarRacing: initial recording" width="400"></td>
+    <td align="center"><img src="record_2.gif" alt="CarRacing: trained agent" width="400"></td>
   </tr>
 </table>
 
-## Résultats et durée
+## Results and runtime
 
-| Indicateur | Valeur |
+| Metric | Value |
 | :--- | :--- |
-| Temps à prévoir | Environ une journée ; prévoir jusqu'à 30 h sur la machine de référence |
-| Estimation issue du retour d'expérience | Une journée |
-| Durée du résumé W&B local | 29 h 18 min 44 s |
-| Dernière moyenne d'évaluation du résumé local | 311,47 |
-| Interactions cumulées du résumé local | 999 443 |
-| Essai local | `run_8544` · W&B `w5q1kcxw` |
-| Matériel de référence | NVIDIA GeForce GTX 1650 · 4 Go |
+| Expected runtime | About a day; allow up to 30 h on the reference machine |
+| Estimate based on experience | One day |
+| Runtime from the local W&B summary | 29 h 18 min 44 s |
+| Latest mean evaluation reward from the local summary | 311.47 |
+| Total interactions from the local summary | 999,443 |
+| Local run | `run_8544` · W&B `w5q1kcxw` |
+| Reference hardware | NVIDIA GeForce GTX 1650 · 4 GB |
 
-Cette expérience est la plus longue des quatre : l'agent apprend à la fois une représentation visuelle et une politique de contrôle. La dernière moyenne d'évaluation locale reste inférieure à certains pics des courbes ; elle ne représente donc pas le meilleur résultat atteint. Les [sources archivées](../results.json) conservent les métriques exactes.
+This is the longest of the four experiments: the agent learns both a visual representation and a control policy. The latest local mean evaluation reward remains below some peaks in the charts, so it does not represent the best result achieved. The [archived sources](../results.json) preserve the exact metrics.
 
-## Méthode et technologies
+## Method and technologies
 
-- **SAC** : acteur gaussien, deux critiques, deux critiques cibles et replay buffer.
-- **CNN PyTorch** : encodeurs convolutifs dans l'acteur et les critiques pour traiter les images.
-- **Adam** : optimisation des réseaux et de la température d'entropie `alpha`.
-- **MSE** pour les critiques ; objectif SAC régularisé par l'entropie pour l'acteur, avec température apprise et entropie cible `−3`.
-- **Gymnasium / Box2D**, **W&B** et **RecordVideo** : simulation, courbes et vidéos.
+- **SAC**: a Gaussian actor, two critics, two target critics, and a replay buffer.
+- **PyTorch CNNs**: convolutional encoders in the actor and critics to process images.
+- **Adam**: optimization of the networks and the entropy temperature `alpha`.
+- **MSE** for the critics; an entropy-regularized SAC objective for the actor, with a learned temperature and target entropy of `−3`.
+- **Gymnasium / Box2D**, **W&B**, and **RecordVideo**: simulation, charts, and videos.
 
-### Prétraitement visuel et actions
+### Visual preprocessing and actions
 
-Les trois environnements utilisés pour l'entraînement, l'évaluation et la vidéo appliquent les mêmes transformations dans [`env.py`](../../../env.py) :
+The three environments used for training, evaluation, and video apply the same transformations in [`env.py`](../../../env.py):
 
-1. Conversion en niveaux de gris.
-2. Redimensionnement à `84 × 84` pixels.
-3. Empilement de **4 images**, soit une observation de forme `(4, 84, 84)`.
-4. Conversion des pixels de `[0, 255]` vers `[0, 1]` dans l'encodeur CNN.
+1. Convert to grayscale.
+2. Resize to `84 × 84` pixels.
+3. Stack **4 frames**, producing an observation with shape `(4, 84, 84)`.
+4. Convert pixels from `[0, 255]` to `[0, 1]` in the CNN encoder.
 
-`RescaleAction` convertit les sorties de la politique dans `[-1, 1]` vers les bornes natives de la direction, de l'accélérateur et du frein. Aucun saut d'images ni augmentation d'images n'est appliqué dans l'implémentation actuelle. Aucun scheduler de taux d'apprentissage n'est utilisé pour SAC.
+`RescaleAction` maps policy outputs in `[-1, 1]` to the native steering, throttle, and brake bounds. The current implementation applies neither frame skipping nor image augmentation. No learning rate scheduler is used for SAC.
 
-## Courbes et analyse
+## Charts and analysis
 
-### Récompenses
-
-<table>
-  <tr><th align="center">Récompense d'entraînement</th><th align="center">Récompense d'évaluation</th></tr>
-  <tr><td align="center"><img src="chart_reward_training.svg" alt="Récompense d'entraînement" width="400"></td><td align="center"><img src="chart_reward_evaluation.svg" alt="Récompense d'évaluation" width="400"></td></tr>
-</table>
-
-La récompense d'entraînement quitte une zone initialement négative et atteint régulièrement des scores élevés, parfois proches de 900. La dispersion demeure importante : de nombreux épisodes restent faibles, même tard dans l'export. Les bons épisodes isolés ne démontrent donc pas une conduite fiable sur tous les circuits.
-
-L'évaluation s'améliore d'abord nettement, puis oscille généralement entre environ 200 et 500, avec un pic proche de 600 et plusieurs reculs. La dernière moyenne locale de 311,47 est cohérente avec un apprentissage encore irrégulier. La variété des pistes et l'évolution de la politique peuvent contribuer à cette dispersion ; les exports ne permettent pas de quantifier leurs effets respectifs.
-
-### Pertes de l'acteur et du critique
+### Rewards
 
 <table>
-  <tr><th align="center">Perte de l'acteur</th><th align="center">Perte du critique exportée</th></tr>
-  <tr><td align="center"><img src="chart_actor_loss.svg" alt="Perte de l'acteur" width="400"></td><td align="center"><img src="chart_critic_loss.svg" alt="Perte du critique exportée" width="400"></td></tr>
+  <tr><th align="center">Training reward</th><th align="center">Evaluation reward</th></tr>
+  <tr><td align="center"><img src="chart_reward_training.svg" alt="Training reward" width="400"></td><td align="center"><img src="chart_reward_evaluation.svg" alt="Evaluation reward" width="400"></td></tr>
 </table>
 
-La perte de l'acteur commence par augmenter, puis devient négative et fluctue autour d'un nouveau niveau. Son signe et son amplitude dépendent des Q-valeurs et de l'entropie ; ils ne s'interprètent pas comme une erreur de conduite. La perte critique demeure majoritairement dans la partie basse de l'échelle affichée, avec des pics ponctuels, alors que les récompenses restent dispersées.
+Training reward moves out of an initially negative range and regularly reaches high scores, sometimes close to 900. Variability remains substantial: many episodes still score poorly, even late in the export. Isolated good episodes therefore do not demonstrate reliable driving across all tracks.
 
-L'export de l'acteur couvre une plage d'abscisses plus courte que les trois autres figures. Sans identification complète de leurs sessions et de leurs réglages d'axe, on ne peut pas aligner précisément les événements entre ces graphiques. L'axe `Step` est conservé dans sa forme d'origine.
+Evaluation initially improves substantially, then generally oscillates between about 200 and 500, with a peak near 600 and several setbacks. The latest local mean of 311.47 is consistent with learning that remains uneven. Track diversity and changes in the policy may contribute to this variability; the exports cannot quantify their respective effects.
 
-## Reproduire l'expérience
+### Actor and critic losses
 
-Depuis la racine du dépôt, après le [setup](../../setup.md) :
+<table>
+  <tr><th align="center">Actor loss</th><th align="center">Exported critic loss</th></tr>
+  <tr><td align="center"><img src="chart_actor_loss.svg" alt="Actor loss" width="400"></td><td align="center"><img src="chart_critic_loss.svg" alt="Exported critic loss" width="400"></td></tr>
+</table>
+
+The actor loss initially increases, then becomes negative and fluctuates around a new level. Its sign and magnitude depend on Q-values and entropy; they should not be interpreted as a driving error. The critic loss remains mostly near the bottom of the displayed scale, with occasional spikes, while rewards remain scattered.
+
+The actor export covers a shorter horizontal range than the other three figures. Without complete identification of their sessions and axis settings, events cannot be precisely aligned across these charts. The `Step` axis is kept in its original form.
+
+## Reproduce the experiment
+
+From the repository root, after [setup](../../setup.md):
 
 ```powershell
 python main.py --config configs/sac_on_carracing.yaml
 ```
 
-Prévoir suffisamment de RAM pour le replay buffer d'images et d'espace disque pour les modèles et les vidéos. Une réduction de `replay.capacity` ou de `replay.batch_size` peut rendre un nouvel essai plus accessible, en modifiant ses conditions d'apprentissage. Conserver les configurations comparées.
+Allow enough RAM for the image replay buffer and enough disk space for models and videos. Reducing `replay.capacity` or `replay.batch_size` can make a new run more accessible, while changing its learning conditions. Keep the configurations being compared.
 
-## Hyperparamètres
+## Hyperparameters
 
-Valeurs de la [configuration actuelle](../../../configs/sac_on_carracing.yaml), complétées par les défauts de [`configs/config.py`](../../../configs/config.py). Elles décrivent le lancement proposé, sans garantir les réglages des courbes historiques.
+Values from the [current configuration](../../../configs/sac_on_carracing.yaml), supplemented by the defaults in [`configs/config.py`](../../../configs/config.py). They describe the suggested run and do not guarantee the settings used for the historical charts.
 
-### Environnement et réseau
+### Environment and network
 
-| Paramètre | Valeur |
+| Parameter | Value |
 | :--- | :--- |
 | `env.name` | `CarRacing-v3` |
 | `env.device` | `cuda` |
 | `env.normalize` | `true` |
 | `network.hidden_size` | `256` |
 
-### Entraînement et replay buffer
+### Training and replay buffer
 
-| Paramètre | Valeur |
+| Parameter | Value |
 | :--- | :--- |
 | `training.nb_episodes` | `1000` |
 | `training.learning_starts` | `10000` |
@@ -107,11 +107,11 @@ Valeurs de la [configuration actuelle](../../../configs/sac_on_carracing.yaml), 
 | `replay.capacity` | `50000` |
 | `replay.batch_size` | `128` |
 
-`learning_starts`, `random_steps` et `train_freq` sont exprimés en interactions avec l'environnement. `gradient_steps` est le nombre de mises à jour par déclenchement ; `evaluation_interval` est exprimé en épisodes.
+`learning_starts`, `random_steps`, and `train_freq` are measured in environment interactions. `gradient_steps` is the number of updates per trigger; `evaluation_interval` is measured in episodes.
 
-### Optimisation
+### Optimization
 
-| Paramètre | Valeur |
+| Parameter | Value |
 | :--- | :--- |
 | `agent.actor_lr` | `0.0003` |
 | `agent.critic_lr` | `0.0003` |
@@ -120,15 +120,15 @@ Valeurs de la [configuration actuelle](../../../configs/sac_on_carracing.yaml), 
 | `agent.tau` | `0.005` |
 | `agent.alpha` | `0.2` |
 
-`alpha` est la valeur initiale du coefficient d'entropie, ensuite appris automatiquement. Les bornes `log_std` configurées sont `-20` et `2`, mais le constructeur utilise actuellement les bornes effectives **−5 et 2** : ces deux champs YAML ne lui sont pas transmis.
+`alpha` is the initial entropy coefficient, which is then learned automatically. The configured `log_std` bounds are `-20` and `2`, but the constructor currently uses the effective bounds **−5 and 2**: these two YAML fields are not passed to it.
 
-Le suivi utilise le projet W&B `atari-rl` et crée les sorties sous `runs/` par défaut. Les évaluations comprennent **20 épisodes déterministes**, puis **3 épisodes enregistrés**, selon le [protocole commun](../README.md#protocole-du-code-actuel).
+Tracking uses the W&B project `atari-rl` and creates outputs under `runs/` by default. Evaluations consist of **20 deterministic episodes**, followed by **3 recorded episodes**, according to the [shared protocol](../README.md#current-training-protocol).
 
-## Pistes d'amélioration
+## Potential improvements
 
-- Évaluer sur davantage de circuits et plusieurs graines, en conservant la dispersion des scores.
-- Journaliser vitesse, direction, accélération, freinage et longueur d'épisode pour mieux expliquer les échecs.
-- Expérimenter un saut d'images avec accumulation des récompenses, en respectant les fins d'épisode.
-- Comparer un stockage de replay plus efficace et des augmentations visuelles comme les décalages ou recadrages aléatoires.
+- Evaluate on more tracks and multiple seeds, recording score variability.
+- Log speed, steering, throttle, braking, and episode length to better explain failures.
+- Experiment with frame skipping and reward accumulation while respecting episode boundaries.
+- Compare more efficient replay storage and visual augmentations such as random shifts or crops.
 
-Ces pistes prolongent les notes de l'expérience ; elles ne sont pas implémentées dans le dépôt.
+These ideas build on the experiment notes; they are not implemented in the repository.

@@ -1,116 +1,116 @@
 # BipedalWalker — Soft Actor-Critic
 
-[← README](../../../README.md) · [Résultats et protocole](../README.md) · [Installation](../../setup.md)
+[← README](../../../README.md) · [Results and protocol](../README.md) · [Setup](../../setup.md)
 
-Faire avancer un robot bipède sur un terrain irrégulier en contrôlant ses quatre articulations. L'environnement fournit 24 observations et quatre actions continues dans `[-1, 1]`. Le projet utilise la variante standard de `BipedalWalker-v3`, sans activer le mode hardcore. [Description Gymnasium](https://gymnasium.farama.org/environments/box2d/bipedal_walker/).
+Move a bipedal robot across uneven terrain by controlling its four joints. The environment provides 24 observations and four continuous actions in `[-1, 1]`. The project uses the standard `BipedalWalker-v3` variant, with hardcore mode disabled. [Gymnasium description](https://gymnasium.farama.org/environments/box2d/bipedal_walker/).
 
-## Avant / après
+## Before / after
 
 <table>
-  <tr><th align="center">Enregistrement initial</th><th align="center">Après entraînement</th></tr>
+  <tr><th align="center">Initial recording</th><th align="center">After training</th></tr>
   <tr>
-    <td align="center"><img src="record_1.gif" alt="BipedalWalker : enregistrement initial" width="400"></td>
-    <td align="center"><img src="record_2.gif" alt="BipedalWalker : agent entraîné" width="400"></td>
+    <td align="center"><img src="record_1.gif" alt="BipedalWalker: initial recording" width="400"></td>
+    <td align="center"><img src="record_2.gif" alt="BipedalWalker: trained agent" width="400"></td>
   </tr>
 </table>
 
-## Résultats et durée
+## Results and runtime
 
-| Indicateur | Valeur |
+| Metric | Value |
 | :--- | :--- |
-| Temps à prévoir | Environ 10 h sur la machine de référence |
-| Premiers résultats prometteurs, selon les notes historiques | Environ 1 h |
-| Durée notée dans la documentation historique | 9 h 30 |
-| Durée du résumé W&B local | 9 h 33 min 52 s |
-| Dernière moyenne d'évaluation du résumé local | 334,42 |
-| Interactions cumulées du résumé local | 1 197 187 |
-| Essai local | `run_3025` · W&B `yqzyzht5` |
-| Matériel de référence | NVIDIA GeForce GTX 1650 · 4 Go |
+| Expected runtime | About 10 h on the reference machine |
+| First promising results, according to historical notes | About 1 h |
+| Runtime noted in historical documentation | 9 h 30 min |
+| Runtime from the local W&B summary | 9 h 33 min 52 s |
+| Latest mean evaluation reward from the local summary | 334.42 |
+| Total interactions from the local summary | 1,197,187 |
+| Local run | `run_3025` · W&B `yqzyzht5` |
+| Reference hardware | NVIDIA GeForce GTX 1650 · 4 GB |
 
-La dernière évaluation locale obtient une récompense élevée, mais les exports révèlent aussi des rechutes importantes pendant l'apprentissage. Les dix heures sont un repère de planification pour l'essai réalisé, pas une garantie de durée pour l'intégralité des 5 000 épisodes configurés. Les [sources archivées](../results.json) permettent de retrouver les valeurs exactes.
+The latest local evaluation achieves a high reward, but the exports also reveal substantial setbacks during learning. Ten hours is a planning estimate for the completed run, not a guaranteed runtime for all 5,000 configured episodes. The [archived sources](../results.json) provide the exact values.
 
-## Méthode et technologies
+## Method and technologies
 
-- **SAC** : un acteur gaussien, deux critiques et leurs réseaux cibles, avec replay buffer.
-- **PyTorch** : réseaux denses à deux couches cachées de 512 unités et activations ReLU.
-- **Adam** : optimisation de l'acteur, de chaque critique et de la température d'entropie `alpha`.
-- **MSE** pour les critiques ; objectif SAC régularisé par l'entropie pour l'acteur, avec température apprise et entropie cible `−4`.
-- **Gymnasium / Box2D**, **W&B** et **RecordVideo** : simulation physique, suivi et enregistrement.
+- **SAC**: a Gaussian actor, two critics and their target networks, with a replay buffer.
+- **PyTorch**: fully connected networks with two hidden layers of 512 units and ReLU activations.
+- **Adam**: optimization of the actor, each critic, and the entropy temperature `alpha`.
+- **MSE** for the critics; an entropy-regularized SAC objective for the actor, with a learned temperature and target entropy of `−4`.
+- **Gymnasium / Box2D**, **W&B**, and **RecordVideo**: physics simulation, tracking, and recording.
 
-Les actions de la politique sont bornées par `tanh` dans l'intervalle attendu par l'environnement ; aucune remise à l'échelle supplémentaire n'est activée. Les mises à jour sont regroupées : après la phase initiale, le code effectue 64 mises à jour toutes les 64 interactions. Aucun scheduler de taux d'apprentissage n'est utilisé pour SAC.
+Policy actions are bounded by `tanh` within the range expected by the environment; no additional rescaling is enabled. Updates are grouped: after the initial phase, the code performs 64 updates every 64 interactions. No learning rate scheduler is used for SAC.
 
-## Courbes et analyse
+## Charts and analysis
 
-### Récompenses
-
-<table>
-  <tr><th align="center">Récompense d'entraînement</th><th align="center">Récompense d'évaluation</th></tr>
-  <tr><td align="center"><img src="chart%20reward_training.svg" alt="Récompense d'entraînement" width="400"></td><td align="center"><img src="chart_reward_evaluation.svg" alt="Récompense d'évaluation" width="400"></td></tr>
-</table>
-
-Les récompenses d'entraînement passent d'une zone négative à un plateau fréquent autour de 330. Des épisodes très faibles persistent pourtant tout au long de l'export. L'agent acquiert donc un comportement efficace sur de nombreux épisodes, avec des échecs occasionnels encore marqués.
-
-L'évaluation confirme cette lecture : plusieurs plateaux au-dessus de 300 alternent avec des chutes proches de −100. La qualité des meilleurs passages ne suffit pas à établir une stabilité continue. Les graphiques seuls ne permettent pas de séparer les effets de la politique, des terrains rencontrés et des mises à jour successives.
-
-### Objectifs d'optimisation
+### Rewards
 
 <table>
-  <tr><th align="center">Perte de l'acteur</th><th align="center">Perte du critique · export 1</th></tr>
-  <tr><td align="center"><img src="chart_actor_loss.svg" alt="Perte de l'acteur" width="400"></td><td align="center"><img src="chart_critic_loss.svg" alt="Perte du critique · export 1" width="400"></td></tr>
-  <tr><th align="center">Perte du critique · export 2</th></tr>
-  <tr><td align="center"><img src="chart_critic_loss_2.svg" alt="Perte du critique · export 2" width="400"></td></tr>
+  <tr><th align="center">Training reward</th><th align="center">Evaluation reward</th></tr>
+  <tr><td align="center"><img src="chart%20reward_training.svg" alt="Training reward" width="400"></td><td align="center"><img src="chart_reward_evaluation.svg" alt="Evaluation reward" width="400"></td></tr>
 </table>
 
-La perte de l'acteur se stabilise globalement à une valeur négative après la phase initiale. Les deux exports de perte critique restent généralement proches du bas de l'échelle affichée, avec un pic net vers l'abscisse `1,1M`. L'acteur présente aussi une perturbation dans cette zone, suivie d'un retour vers son niveau précédent.
+Training rewards move from a negative range to frequent plateaus around 330. Very poor episodes nevertheless persist throughout the export. The agent therefore learns effective behavior in many episodes, with occasional failures that remain substantial.
 
-Ces événements sont compatibles avec un ajustement transitoire des estimations de valeur ; leur cause n'est pas identifiable avec ces seules courbes. Les noms des deux exports critiques ne précisent pas lequel correspond à `critic_1_loss` ou `critic_2_loss` ; les figures restent donc nommées par numéro d'export.
+Evaluation supports this interpretation: several plateaus above 300 alternate with drops close to −100. The quality of the best stretches is insufficient to establish continuous stability. The charts alone cannot separate the effects of the policy, the terrain encountered, and successive updates.
 
-### Température d'entropie
+### Optimization objectives
 
 <table>
-  <tr><th align="center">Coefficient d'entropie alpha</th><th align="center">Perte de la température d'entropie</th></tr>
-  <tr><td align="center"><img src="chart_alpha.svg" alt="Coefficient d'entropie alpha" width="400"></td><td align="center"><img src="chart_alpha_loss.svg" alt="Perte de la température d'entropie" width="400"></td></tr>
+  <tr><th align="center">Actor loss</th><th align="center">Critic loss · export 1</th></tr>
+  <tr><td align="center"><img src="chart_actor_loss.svg" alt="Actor loss" width="400"></td><td align="center"><img src="chart_critic_loss.svg" alt="Critic loss · export 1" width="400"></td></tr>
+  <tr><th align="center">Critic loss · export 2</th></tr>
+  <tr><td align="center"><img src="chart_critic_loss_2.svg" alt="Critic loss · export 2" width="400"></td></tr>
 </table>
 
-Le coefficient `alpha` diminue rapidement depuis sa valeur initiale de 0,2, puis reste proche de 0,01 avec quelques pointes. Le résumé local relève `alpha ≈ 0,0106`. Le poids du terme d'entropie devient donc plus faible, tout en continuant à s'adapter. La perte associée oscille autour d'une zone relativement stable après le début de l'apprentissage ; cela ne garantit pas l'absence d'échecs du robot.
+The actor loss generally stabilizes at a negative value after the initial phase. Both critic loss exports usually remain near the bottom of the displayed scale, with a clear spike around the horizontal coordinate `1.1M`. The actor also shows a disturbance in this region, followed by a return to its previous level.
 
-### Mémoire et progression
+These events are consistent with a temporary adjustment of value estimates; their cause cannot be identified from these charts alone. The names of the two critic exports do not specify which corresponds to `critic_1_loss` or `critic_2_loss`, so the figures remain labeled by export number.
+
+### Entropy temperature
 
 <table>
-  <tr><th align="center">Taille du replay buffer</th><th align="center">Interactions cumulées : Steps total</th></tr>
-  <tr><td align="center"><img src="chart_buffer_size.svg" alt="Taille du replay buffer" width="400"></td><td align="center"><img src="chart_step_total.svg" alt="Interactions cumulées : Steps total" width="400"></td></tr>
+  <tr><th align="center">Entropy coefficient alpha</th><th align="center">Entropy temperature loss</th></tr>
+  <tr><td align="center"><img src="chart_alpha.svg" alt="Entropy coefficient alpha" width="400"></td><td align="center"><img src="chart_alpha_loss.svg" alt="Entropy temperature loss" width="400"></td></tr>
 </table>
 
-Le buffer atteint sa capacité de 300 000 transitions puis reste constant : les nouvelles expériences remplacent les plus anciennes. Ce plateau décrit le stockage, pas un arrêt de l'apprentissage. `Steps total` continue à croître sur toute la portion exportée.
+The coefficient `alpha` quickly decreases from its initial value of 0.2, then stays near 0.01 with a few spikes. The local summary records `alpha ≈ 0.0106`. The entropy term therefore carries less weight while continuing to adapt. The associated loss oscillates within a relatively stable range after learning begins; this does not guarantee that the robot will never fail.
 
-L'axe horizontal `Step` est conservé tel qu'exporté par W&B. La figure de progression et le résumé local couvrent des étendues différentes ; leurs dernières valeurs ne sont pas assimilées.
+### Memory and progress
 
-## Reproduire l'expérience
+<table>
+  <tr><th align="center">Replay buffer size</th><th align="center">Total interactions: Steps total</th></tr>
+  <tr><td align="center"><img src="chart_buffer_size.svg" alt="Replay buffer size" width="400"></td><td align="center"><img src="chart_step_total.svg" alt="Total interactions: Steps total" width="400"></td></tr>
+</table>
 
-Depuis la racine du dépôt, après le [setup](../../setup.md) :
+The buffer reaches its capacity of 300,000 transitions and then remains constant: new experiences replace the oldest ones. This plateau describes storage, not a halt in learning. `Steps total` continues to increase throughout the exported segment.
+
+The horizontal `Step` axis is kept as exported by W&B. The progress chart and local summary cover different ranges; their final values are not treated as equivalent.
+
+## Reproduce the experiment
+
+From the repository root, after [setup](../../setup.md):
 
 ```powershell
 python main.py --config configs/sac_on_bipedalwalker.yaml
 ```
 
-Prévoir une exécution longue et conserver `checkpoints/best.pt` pour retrouver la meilleure évaluation sauvegardée, même si les suivantes régressent. La [commande de reprise](../../../README.md#reprendre-un-entraînement) permet de prolonger un essai.
+Plan for a long run and keep `checkpoints/best.pt` to retain the best saved evaluation, even if later ones regress. The [resume command](../../../README.md#resume-training) lets you extend a run.
 
-## Hyperparamètres
+## Hyperparameters
 
-Valeurs de la [configuration actuelle](../../../configs/sac_on_bipedalwalker.yaml), complétées par les défauts de [`configs/config.py`](../../../configs/config.py). Elles décrivent le lancement proposé, sans garantir les réglages des courbes historiques.
+Values from the [current configuration](../../../configs/sac_on_bipedalwalker.yaml), supplemented by the defaults in [`configs/config.py`](../../../configs/config.py). They describe the suggested run and do not guarantee the settings used for the historical charts.
 
-### Environnement et réseau
+### Environment and network
 
-| Paramètre | Valeur |
+| Parameter | Value |
 | :--- | :--- |
 | `env.name` | `BipedalWalker-v3` |
 | `env.device` | `cuda` |
 | `env.normalize` | `false` |
 | `network.hidden_size` | `512` |
 
-### Entraînement et replay buffer
+### Training and replay buffer
 
-| Paramètre | Valeur |
+| Parameter | Value |
 | :--- | :--- |
 | `training.nb_episodes` | `5000` |
 | `training.learning_starts` | `10000` |
@@ -121,11 +121,11 @@ Valeurs de la [configuration actuelle](../../../configs/sac_on_bipedalwalker.yam
 | `replay.capacity` | `300000` |
 | `replay.batch_size` | `256` |
 
-`learning_starts`, `random_steps` et `train_freq` sont exprimés en interactions avec l'environnement. `gradient_steps` est le nombre de mises à jour par déclenchement ; `evaluation_interval` est exprimé en épisodes.
+`learning_starts`, `random_steps`, and `train_freq` are measured in environment interactions. `gradient_steps` is the number of updates per trigger; `evaluation_interval` is measured in episodes.
 
-### Optimisation
+### Optimization
 
-| Paramètre | Valeur |
+| Parameter | Value |
 | :--- | :--- |
 | `agent.actor_lr` | `0.00073` |
 | `agent.critic_lr` | `0.00073` |
@@ -134,6 +134,6 @@ Valeurs de la [configuration actuelle](../../../configs/sac_on_bipedalwalker.yam
 | `agent.tau` | `0.02` |
 | `agent.alpha` | `0.2` |
 
-`alpha` est la valeur initiale du coefficient d'entropie, ensuite appris automatiquement. Les bornes `log_std` configurées sont `-20` et `2`, mais le constructeur utilise actuellement les bornes effectives **−5 et 2** : ces deux champs YAML ne lui sont pas transmis.
+`alpha` is the initial entropy coefficient, which is then learned automatically. The configured `log_std` bounds are `-20` and `2`, but the constructor currently uses the effective bounds **−5 and 2**: these two YAML fields are not passed to it.
 
-Le suivi utilise le projet W&B `atari-rl` et crée les sorties sous `runs/` par défaut. Les évaluations comprennent **20 épisodes déterministes**, puis **3 épisodes enregistrés**, selon le [protocole commun](../README.md#protocole-du-code-actuel).
+Tracking uses the W&B project `atari-rl` and creates outputs under `runs/` by default. Evaluations consist of **20 deterministic episodes**, followed by **3 recorded episodes**, according to the [shared protocol](../README.md#current-training-protocol).

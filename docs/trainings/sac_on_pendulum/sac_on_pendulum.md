@@ -1,110 +1,110 @@
 # Pendulum — Soft Actor-Critic
 
-[← README](../../../README.md) · [Résultats et protocole](../README.md) · [Installation](../../setup.md)
+[← README](../../../README.md) · [Results and protocol](../README.md) · [Setup](../../setup.md)
 
-Apprendre à redresser puis stabiliser un pendule en contrôlant un couple continu. L'observation comporte trois composantes et l'agent produit une action. La récompense pénalise l'écart à la verticale, la vitesse et l'effort : une valeur moins négative indique une meilleure performance. [Description Gymnasium](https://gymnasium.farama.org/environments/classic_control/pendulum/).
+Learn to swing up and then stabilize a pendulum by controlling continuous torque. The observation has three components, and the agent produces one action. The reward penalizes deviation from upright, speed, and effort: a less negative value indicates better performance. [Gymnasium description](https://gymnasium.farama.org/environments/classic_control/pendulum/).
 
-## Avant / après
+## Before / after
 
 <table>
-  <tr><th align="center">Enregistrement initial</th><th align="center">Après entraînement</th></tr>
+  <tr><th align="center">Initial recording</th><th align="center">After training</th></tr>
   <tr>
-    <td align="center"><img src="record_1.gif" alt="Pendulum : enregistrement initial" width="400"></td>
-    <td align="center"><img src="record_2.gif" alt="Pendulum : agent entraîné" width="400"></td>
+    <td align="center"><img src="record_1.gif" alt="Pendulum: initial recording" width="400"></td>
+    <td align="center"><img src="record_2.gif" alt="Pendulum: trained agent" width="400"></td>
   </tr>
 </table>
 
-## Résultats et durée
+## Results and runtime
 
-| Indicateur | Valeur |
+| Metric | Value |
 | :--- | :--- |
-| Temps à prévoir | Environ 2 min sur la machine de référence |
-| Durée notée dans la documentation historique | 1 min 55 s |
-| Durée du résumé W&B local | 1 min 50 s |
-| Dernière moyenne d'évaluation du résumé local | −148,81 |
-| Interactions cumulées du résumé local | 8 000 |
-| Essai local | `run_4248` · W&B `lwta13av` |
-| Matériel de référence | NVIDIA GeForce GTX 1650 · 4 Go |
+| Expected runtime | About 2 min on the reference machine |
+| Runtime noted in historical documentation | 1 min 55 s |
+| Runtime from the local W&B summary | 1 min 50 s |
+| Latest mean evaluation reward from the local summary | −148.81 |
+| Total interactions from the local summary | 8,000 |
+| Local run | `run_4248` · W&B `lwta13av` |
+| Reference hardware | NVIDIA GeForce GTX 1650 · 4 GB |
 
-Pendulum est l'expérience SAC la plus courte du dépôt : le YAML prévoit 40 épisodes. Le résumé local donne un résultat encourageant, mais les courbes historiques montrent une progression irrégulière. Les [sources archivées](../results.json) et le [protocole de lecture](../README.md) distinguent ces relevés.
+Pendulum is the shortest SAC experiment in the repository: the YAML file specifies 40 episodes. The local summary gives an encouraging result, but the historical charts show uneven progress. The [archived sources](../results.json) and [interpretation guidelines](../README.md) distinguish these records.
 
-## Méthode et technologies
+## Method and technologies
 
-- **SAC** : un acteur gaussien, deux critiques et deux critiques cibles, avec mise à jour douce des cibles.
-- **PyTorch** : réseaux denses à activations ReLU et échantillonnage reparamétré, suivi d'une transformation `tanh`.
-- **Adam** : optimiseurs de l'acteur, des deux critiques et du coefficient d'entropie `alpha`.
-- **MSE** pour les critiques ; objectif de l'acteur combinant Q-valeur et entropie. La perte de l'acteur n'est pas une MSE.
-- **Gymnasium**, **W&B** et **RecordVideo** : simulation, métriques et vidéos.
+- **SAC**: a Gaussian actor, two critics, and two target critics, with soft target updates.
+- **PyTorch**: fully connected networks with ReLU activations and reparameterized sampling, followed by a `tanh` transformation.
+- **Adam**: optimizers for the actor, both critics, and the entropy coefficient `alpha`.
+- **MSE** for the critics; an actor objective combining Q-value and entropy. The actor loss is not an MSE.
+- **Gymnasium**, **W&B**, and **RecordVideo**: simulation, metrics, and videos.
 
-Les actions produites dans `[-1, 1]` sont remises à l'échelle par `RescaleAction` dans l'intervalle de couple de Pendulum. L'entropie cible vaut `−1`, selon la dimension de l'action. Aucun scheduler de taux d'apprentissage n'est utilisé pour SAC dans le code actuel.
+Actions produced in `[-1, 1]` are rescaled by `RescaleAction` to Pendulum's torque range. The target entropy is `−1`, based on the action dimension. The current code does not use a learning rate scheduler for SAC.
 
-## Courbes et analyse
+## Charts and analysis
 
-### Récompenses
-
-<table>
-  <tr><th align="center">Récompense d'entraînement</th><th align="center">Récompense d'évaluation</th></tr>
-  <tr><td align="center"><img src="chart_reward_training.svg" alt="Récompense d'entraînement" width="400"></td><td align="center"><img src="chart_reward_evaluation.svg" alt="Récompense d'évaluation" width="400"></td></tr>
-</table>
-
-La récompense d'entraînement passe de valeurs souvent proches de −1 500 à plusieurs épisodes nettement meilleurs, parfois proches de zéro. Les rechutes restent nombreuses : l'amélioration ne constitue pas un plateau stable.
-
-L'export d'évaluation montre un très bon point autour de −100, suivi d'un recul sous −1 200, puis d'une récupération partielle. Il ne suffit donc pas à conclure à une convergence régulière. Sa dernière valeur diffère du résumé W&B local à −148,81 : ces deux relevés sont présentés séparément.
-
-### Pertes de l'acteur et du critique
+### Rewards
 
 <table>
-  <tr><th align="center">Perte de l'acteur</th><th align="center">Perte du critique exportée</th></tr>
-  <tr><td align="center"><img src="chart_loss_actor.svg" alt="Perte de l'acteur" width="400"></td><td align="center"><img src="chart_loss_critic.svg" alt="Perte du critique exportée" width="400"></td></tr>
+  <tr><th align="center">Training reward</th><th align="center">Evaluation reward</th></tr>
+  <tr><td align="center"><img src="chart_reward_training.svg" alt="Training reward" width="400"></td><td align="center"><img src="chart_reward_evaluation.svg" alt="Evaluation reward" width="400"></td></tr>
 </table>
 
-La perte de l'acteur augmente, tandis que celle du critique comporte des pics ponctuels dépassant 400. L'objectif SAC de l'acteur dépend de l'échelle des Q-valeurs et du terme d'entropie : sa hausse ne signifie pas directement une baisse de performance. Les pics du critique signalent des périodes de plus grande erreur sur les cibles de valeur ; les récompenses restent le critère principal pour juger le comportement.
+Training reward moves from values often near −1,500 to several much better episodes, sometimes close to zero. Setbacks remain frequent: the improvement does not form a stable plateau.
 
-### Valeurs estimées et exploration
+The evaluation export shows a very good point around −100, followed by a drop below −1,200 and then a partial recovery. It is therefore insufficient to conclude that convergence is steady. Its final value differs from the local W&B summary at −148.81: these two records are presented separately.
+
+### Actor and critic losses
 
 <table>
-  <tr><th align="center">Q-valeur moyenne</th><th align="center">Log-probabilité des actions</th></tr>
-  <tr><td align="center"><img src="chart_mean_q.svg" alt="Q-valeur moyenne" width="400"></td><td align="center"><img src="chart_log_prob.svg" alt="Log-probabilité des actions" width="400"></td></tr>
-  <tr><th align="center">Écart-type de la politique</th><th align="center">Log de l'écart-type</th></tr>
-  <tr><td align="center"><img src="chart_std.svg" alt="Écart-type de la politique" width="400"></td><td align="center"><img src="chart_log_std.svg" alt="Log de l'écart-type" width="400"></td></tr>
+  <tr><th align="center">Actor loss</th><th align="center">Exported critic loss</th></tr>
+  <tr><td align="center"><img src="chart_loss_actor.svg" alt="Actor loss" width="400"></td><td align="center"><img src="chart_loss_critic.svg" alt="Exported critic loss" width="400"></td></tr>
 </table>
 
-La Q-valeur moyenne devient plus négative au cours de l'export, ce qui est cohérent avec l'apprentissage de retours négatifs dans cet environnement. Cela ne prouve ni une amélioration ni une dégradation de la politique sans comparaison aux retours observés.
+The actor loss increases, while the critic loss has occasional spikes above 400. The SAC actor objective depends on the scale of Q-values and the entropy term: an increase does not directly imply worse performance. Critic spikes indicate periods of larger errors relative to value targets; rewards remain the main criterion for judging behavior.
 
-L'écart-type de la politique diminue globalement d'environ 0,9 à 0,5, et son logarithme suit la même tendance. Sur les observations échantillonnées, la distribution gaussienne devient plus concentrée. La log-probabilité augmente globalement avec des fluctuations ; ces métriques décrivent l'exploration de la politique, pas un taux de réussite.
+### Value estimates and exploration
 
-Les huit SVG sont conservés avec leur axe `Step` d'origine. Leur correspondance exacte avec les épisodes et avec la session locale n'est pas établie.
+<table>
+  <tr><th align="center">Mean Q-value</th><th align="center">Action log-probability</th></tr>
+  <tr><td align="center"><img src="chart_mean_q.svg" alt="Mean Q-value" width="400"></td><td align="center"><img src="chart_log_prob.svg" alt="Action log-probability" width="400"></td></tr>
+  <tr><th align="center">Policy standard deviation</th><th align="center">Log standard deviation</th></tr>
+  <tr><td align="center"><img src="chart_std.svg" alt="Policy standard deviation" width="400"></td><td align="center"><img src="chart_log_std.svg" alt="Log standard deviation" width="400"></td></tr>
+</table>
 
-## Reproduire l'expérience
+The mean Q-value becomes more negative over the export, which is consistent with learning negative returns in this environment. This proves neither an improvement nor a deterioration of the policy without comparison to observed returns.
 
-Depuis la racine du dépôt, après le [setup](../../setup.md) :
+The policy's standard deviation generally decreases from about 0.9 to 0.5, and its logarithm follows the same trend. On the sampled observations, the Gaussian distribution becomes more concentrated. Log-probability generally increases with fluctuations; these metrics describe policy exploration, not a success rate.
+
+The eight SVGs retain their original `Step` axis. Their exact correspondence to episodes and to the local session has not been established.
+
+## Reproduce the experiment
+
+From the repository root, after [setup](../../setup.md):
 
 ```powershell
 python main.py --config configs/sac_on_pendulum.yaml
 ```
 
-Pour prolonger le budget lors d'un nouvel essai :
+To increase the episode budget for a new run:
 
 ```powershell
 python main.py --config configs/sac_on_pendulum.yaml --episodes 80
 ```
 
-## Hyperparamètres
+## Hyperparameters
 
-Valeurs de la [configuration actuelle](../../../configs/sac_on_pendulum.yaml), complétées par les défauts de [`configs/config.py`](../../../configs/config.py). Elles décrivent le lancement proposé, sans garantir les réglages des courbes historiques.
+Values from the [current configuration](../../../configs/sac_on_pendulum.yaml), supplemented by the defaults in [`configs/config.py`](../../../configs/config.py). They describe the suggested run and do not guarantee the settings used for the historical charts.
 
-### Environnement et réseau
+### Environment and network
 
-| Paramètre | Valeur |
+| Parameter | Value |
 | :--- | :--- |
 | `env.name` | `Pendulum-v1` |
 | `env.device` | `cuda` |
 | `env.normalize` | `true` |
 | `network.hidden_size` | `64` |
 
-### Entraînement et replay buffer
+### Training and replay buffer
 
-| Paramètre | Valeur |
+| Parameter | Value |
 | :--- | :--- |
 | `training.nb_episodes` | `40` |
 | `training.learning_starts` | `1000` |
@@ -115,11 +115,11 @@ Valeurs de la [configuration actuelle](../../../configs/sac_on_pendulum.yaml), c
 | `replay.capacity` | `10000` |
 | `replay.batch_size` | `64` |
 
-`learning_starts`, `random_steps` et `train_freq` sont exprimés en interactions avec l'environnement. `gradient_steps` est le nombre de mises à jour par déclenchement ; `evaluation_interval` est exprimé en épisodes.
+`learning_starts`, `random_steps`, and `train_freq` are measured in environment interactions. `gradient_steps` is the number of updates per trigger; `evaluation_interval` is measured in episodes.
 
-### Optimisation
+### Optimization
 
-| Paramètre | Valeur |
+| Parameter | Value |
 | :--- | :--- |
 | `agent.actor_lr` | `0.003` |
 | `agent.critic_lr` | `0.003` |
@@ -128,6 +128,6 @@ Valeurs de la [configuration actuelle](../../../configs/sac_on_pendulum.yaml), c
 | `agent.tau` | `0.005` |
 | `agent.alpha` | `0.2` |
 
-`alpha` est la valeur initiale du coefficient d'entropie, ensuite appris automatiquement. Les bornes `log_std` configurées sont `-20` et `2`, mais le constructeur utilise actuellement les bornes effectives **−5 et 2** : ces deux champs YAML ne lui sont pas transmis.
+`alpha` is the initial entropy coefficient, which is then learned automatically. The configured `log_std` bounds are `-20` and `2`, but the constructor currently uses the effective bounds **−5 and 2**: these two YAML fields are not passed to it.
 
-Le suivi utilise le projet W&B `atari-rl` et crée les sorties sous `runs/` par défaut. Les évaluations comprennent **20 épisodes déterministes**, puis **3 épisodes enregistrés**, selon le [protocole commun](../README.md#protocole-du-code-actuel).
+Tracking uses the W&B project `atari-rl` and creates outputs under `runs/` by default. Evaluations consist of **20 deterministic episodes**, followed by **3 recorded episodes**, according to the [shared protocol](../README.md#current-training-protocol).

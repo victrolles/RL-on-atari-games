@@ -1,8 +1,8 @@
 # Deep Reinforcement Learning — DQN & SAC
 
-Implémentations en **PyTorch** de DQN et Soft Actor-Critic pour apprendre à équilibrer, marcher et conduire dans quatre environnements **Gymnasium**. Les expériences partagent une boucle d'entraînement, des configurations YAML, un suivi **Weights & Biases** et des sauvegardes de modèles.
+**PyTorch** implementations of DQN and Soft Actor-Critic for learning to balance, walk, and drive in four **Gymnasium** environments. The experiments share a training loop, YAML configurations, **Weights & Biases** tracking, and model checkpoints.
 
-## Résultats en action
+## Results in action
 
 <table>
   <tr>
@@ -11,12 +11,12 @@ Implémentations en **PyTorch** de DQN et Soft Actor-Critic pour apprendre à é
   </tr>
   <tr>
     <td align="center">
-      <a href="docs/trainings/dql_on_cartpole/dql_on_cartpole.md"><img src="docs/trainings/dql_on_cartpole/record_2.gif" alt="Agent DQN entraîné sur CartPole" width="400"></a><br>
-      <a href="docs/trainings/dql_on_cartpole/dql_on_cartpole.md">Résultats, courbes et hyperparamètres</a>
+      <a href="docs/trainings/dql_on_cartpole/dql_on_cartpole.md"><img src="docs/trainings/dql_on_cartpole/record_2.gif" alt="DQN agent trained on CartPole" width="400"></a><br>
+      <a href="docs/trainings/dql_on_cartpole/dql_on_cartpole.md">Results, charts, and hyperparameters</a>
     </td>
     <td align="center">
-      <a href="docs/trainings/sac_on_pendulum/sac_on_pendulum.md"><img src="docs/trainings/sac_on_pendulum/record_2.gif" alt="Agent SAC entraîné sur Pendulum" width="400"></a><br>
-      <a href="docs/trainings/sac_on_pendulum/sac_on_pendulum.md">Résultats, courbes et hyperparamètres</a>
+      <a href="docs/trainings/sac_on_pendulum/sac_on_pendulum.md"><img src="docs/trainings/sac_on_pendulum/record_2.gif" alt="SAC agent trained on Pendulum" width="400"></a><br>
+      <a href="docs/trainings/sac_on_pendulum/sac_on_pendulum.md">Results, charts, and hyperparameters</a>
     </td>
   </tr>
   <tr>
@@ -25,34 +25,34 @@ Implémentations en **PyTorch** de DQN et Soft Actor-Critic pour apprendre à é
   </tr>
   <tr>
     <td align="center">
-      <a href="docs/trainings/sac_on_bipedalwalker/sac_on_bipedalwalker.md"><img src="docs/trainings/sac_on_bipedalwalker/record_2.gif" alt="Agent SAC entraîné sur BipedalWalker" width="400"></a><br>
-      <a href="docs/trainings/sac_on_bipedalwalker/sac_on_bipedalwalker.md">Résultats, courbes et hyperparamètres</a>
+      <a href="docs/trainings/sac_on_bipedalwalker/sac_on_bipedalwalker.md"><img src="docs/trainings/sac_on_bipedalwalker/record_2.gif" alt="SAC agent trained on BipedalWalker" width="400"></a><br>
+      <a href="docs/trainings/sac_on_bipedalwalker/sac_on_bipedalwalker.md">Results, charts, and hyperparameters</a>
     </td>
     <td align="center">
-      <a href="docs/trainings/sac_on_carracing/sac_on_carracing.md"><img src="docs/trainings/sac_on_carracing/record_2.gif" alt="Agent SAC avec encodeurs CNN entraîné sur CarRacing" width="400"></a><br>
-      <a href="docs/trainings/sac_on_carracing/sac_on_carracing.md">Résultats, courbes et hyperparamètres</a>
+      <a href="docs/trainings/sac_on_carracing/sac_on_carracing.md"><img src="docs/trainings/sac_on_carracing/record_2.gif" alt="SAC agent with CNN encoders trained on CarRacing" width="400"></a><br>
+      <a href="docs/trainings/sac_on_carracing/sac_on_carracing.md">Results, charts, and hyperparameters</a>
     </td>
   </tr>
 </table>
 
-| Environnement | Agent | Dernière récompense moyenne d'évaluation¹ | Temps à prévoir² |
+| Environment | Agent | Latest mean evaluation reward¹ | Expected runtime² |
 | :--- | :--- | ---: | :--- |
-| `CartPole-v1` | DQN · réseau dense | 500,00 | Quelques minutes, environ 2 à 5 min |
-| `Pendulum-v1` | SAC · réseaux denses | −148,81 | Environ 2 min |
-| `BipedalWalker-v3` | SAC · réseaux denses | 334,42 | Environ 10 h |
-| `CarRacing-v3` | SAC · encodeurs convolutifs | 311,47 | Environ une journée, 29 h sur l'essai relevé |
+| `CartPole-v1` | DQN · fully connected network | 500.00 | A few minutes, roughly 2–5 min |
+| `Pendulum-v1` | SAC · fully connected networks | −148.81 | About 2 min |
+| `BipedalWalker-v3` | SAC · fully connected networks | 334.42 | About 10 h |
+| `CarRacing-v3` | SAC · convolutional encoders | 311.47 | About a day, 29 h for the recorded run |
 
-¹ Valeurs des résumés W&B locaux, archivées dans [les résultats de référence](docs/trainings/README.md). Les récompenses ont des échelles différentes selon l'environnement. Les GIF et les courbes historiques ne sont pas tous rattachés avec certitude à ces mêmes essais.
+¹ Values from local W&B summaries, archived in the [reference results](docs/trainings/README.md). Reward scales differ across environments. The historical GIFs and charts cannot all be reliably linked to these same runs.
 
-² Ordres de grandeur sur une **NVIDIA GeForce GTX 1650 de 4 Go**, sous Windows et Python 3.13. Ils décrivent les essais disponibles, qui n'ont pas nécessairement épuisé le budget d'épisodes configuré. Le matériel, les paramètres, les évaluations et les enregistrements influencent la durée. Chaque fiche précise les mesures retrouvées.
+² Rough estimates on a **4 GB NVIDIA GeForce GTX 1650**, running Windows and Python 3.13. They describe the available runs, which did not necessarily use the full configured episode budget. Hardware, settings, evaluations, and recordings affect runtime. Each experiment page lists the measurements found.
 
-[Setup](#setup) · [Lancer un entraînement](#lancer-un-entraînement) · [Configurer une expérience](#configurer-une-expérience) · [Documentation](#documentation)
+[Setup](#setup) · [Run training](#run-training) · [Configure an experiment](#configure-an-experiment) · [Documentation](#documentation)
 
 ## Setup
 
-Prérequis : **Python 3.13** pour retrouver l'environnement de travail utilisé, **Git** et **Docker Desktop** démarré pour le serveur W&B local. Un GPU NVIDIA compatible CUDA est utile pour les deux expériences longues ; le code utilise le CPU si CUDA est indisponible.
+Prerequisites: **Python 3.13** to match the original working environment, **Git**, and a running **Docker Desktop** instance for the local W&B server. A CUDA-compatible NVIDIA GPU is useful for the two longer experiments; the code uses the CPU if CUDA is unavailable.
 
-Depuis PowerShell :
+From PowerShell:
 
 ```powershell
 git clone https://github.com/victrolles/RL-on-atari-games.git
@@ -63,9 +63,9 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-Le fichier de dépendances ajoute l'index PyTorch **CUDA 13.2**. Pour adapter l'installation au matériel, résoudre un problème Box2D ou configurer Jupyter, consulter le [guide d'installation détaillé](docs/setup.md).
+The requirements file adds the PyTorch **CUDA 13.2** index. To adapt the installation to your hardware, troubleshoot Box2D, or configure Jupyter, see the [detailed setup guide](docs/setup.md).
 
-Lancer ensuite le serveur **Weights & Biases local** et connecter le client :
+Then start the **local Weights & Biases** server and connect the client:
 
 ```powershell
 wandb server start
@@ -73,63 +73,63 @@ $env:WANDB_BASE_URL = "http://localhost:8080"
 wandb login --host=http://localhost:8080
 ```
 
-Ouvrir [localhost:8080](http://localhost:8080), terminer la configuration initiale du serveur et utiliser la clé API du compte local pour la connexion. Les expériences apparaîtront dans le projet **`atari-rl`**. Voir le [démarrage officiel de W&B Server](https://github.com/wandb/server#quickstart), notamment pour l'activation de la licence locale.
+Open [localhost:8080](http://localhost:8080), complete the initial server setup, and sign in using the local account's API key. Experiments will appear in the **`atari-rl`** project. See the [official W&B Server quickstart](https://github.com/wandb/server#quickstart), including local license activation.
 
-Pour travailler sans serveur, le [guide de setup](docs/setup.md#mode-hors-ligne) décrit le mode hors ligne.
+To work without a server, see offline mode in the [setup guide](docs/setup.md#offline-mode).
 
-## Lancer un entraînement
+## Run training
 
-Exécuter **une commande au choix**, depuis la racine du dépôt, avec l'environnement virtuel activé et W&B configuré :
+Run **one of the following commands** from the repository root, with the virtual environment activated and W&B configured:
 
 ```powershell
-# CartPole : DQN, quelques minutes
+# CartPole: DQN, a few minutes
 python main.py --config configs/dqn_on_cartpole.yaml
 
-# Pendulum : SAC, environ 2 minutes
+# Pendulum: SAC, about 2 minutes
 python main.py --config configs/sac_on_pendulum.yaml
 
-# BipedalWalker : SAC, environ 10 heures
+# BipedalWalker: SAC, about 10 hours
 python main.py --config configs/sac_on_bipedalwalker.yaml
 
-# CarRacing : SAC avec CNN, environ une journée
+# CarRacing: SAC with CNNs, about a day
 python main.py --config configs/sac_on_carracing.yaml
 ```
 
-Toujours fournir `--config` pour un nouvel entraînement : le chemin utilisé par défaut dans `main.py`, `configs/sac.yaml`, n'existe pas dans le dépôt.
+Always provide `--config` for a new training run: the default path in `main.py`, `configs/sac.yaml`, does not exist in the repository.
 
-### Ajuster le nombre d'épisodes
+### Adjust the episode count
 
 ```powershell
 python main.py --config configs/sac_on_pendulum.yaml --episodes 80
 ```
 
-`--episodes` définit le **nombre total d'épisodes visé**. Un lancement très court peut se terminer avant la première évaluation ou avant le début des mises à jour ; il ne produira alors pas de checkpoint.
+`--episodes` sets the **target total number of episodes**. A very short run may end before the first evaluation or before updates begin; in that case, it will not produce a checkpoint.
 
-### Reprendre un entraînement
+### Resume training
 
-Remplacer `run_XXXX` par le dossier affiché au lancement :
+Replace `run_XXXX` with the directory shown at startup:
 
 ```powershell
 python main.py --checkpoint runs/Pendulum-v1/run_XXXX/checkpoints/latest.pt --episodes 80
 ```
 
-Utiliser `best.pt` pour repartir du meilleur checkpoint évalué. La reprise recharge le `config.yaml` de l'expérience : **ne pas combiner `--checkpoint` et `--config`**. Elle restaure les réseaux, les optimiseurs et la progression, mais le replay buffer repart vide. Elle crée également une nouvelle session W&B.
+Use `best.pt` to resume from the best evaluated checkpoint. Resuming reloads the experiment's `config.yaml`: **do not combine `--checkpoint` and `--config`**. It restores the networks, optimizers, and progress, but starts with an empty replay buffer. It also creates a new W&B session.
 
-## Configurer une expérience
+## Configure an experiment
 
-**Pour modifier les entraînements, éditer simplement le fichier `.yaml` correspondant dans [`configs/`](configs/).** Les champs omis utilisent les valeurs par défaut de [`configs/config.py`](configs/config.py).
+**To change training settings, edit the corresponding `.yaml` file in [`configs/`](configs/).** Omitted fields use the defaults from [`configs/config.py`](configs/config.py).
 
-| Section | Paramètres utiles | Rôle |
+| Section | Useful parameters | Purpose |
 | :--- | :--- | :--- |
-| `env` | `name`, `device`, `normalize` | Environnement, CPU/CUDA et remise à l'échelle des actions |
-| `network` | `hidden_size` | Largeur des couches denses |
-| `training` | `nb_episodes`, `learning_starts`, `random_steps` | Budget, début de l'apprentissage et exploration initiale |
-| `training` | `train_freq`, `gradient_steps`, `evaluation_interval` | Fréquence des mises à jour et des évaluations |
-| `replay` | `capacity`, `batch_size` | Taille de la mémoire d'expérience et des lots |
-| `agent` | Taux d'apprentissage, `gamma`, paramètres DQN ou SAC | Réglages de l'algorithme |
-| `logging` | `run_dir` | Répertoire parent des expériences |
+| `env` | `name`, `device`, `normalize` | Environment, CPU/CUDA, and action rescaling |
+| `network` | `hidden_size` | Width of fully connected layers |
+| `training` | `nb_episodes`, `learning_starts`, `random_steps` | Budget, learning start, and initial exploration |
+| `training` | `train_freq`, `gradient_steps`, `evaluation_interval` | Update and evaluation frequency |
+| `replay` | `capacity`, `batch_size` | Replay buffer and batch sizes |
+| `agent` | Learning rates, `gamma`, DQN or SAC parameters | Algorithm settings |
+| `logging` | `run_dir` | Parent directory for experiments |
 
-Par exemple, dans la configuration de Pendulum :
+For example, in the Pendulum configuration:
 
 ```yaml
 training:
@@ -137,47 +137,47 @@ training:
   evaluation_interval: 10
 ```
 
-Cet extrait montre les champs à modifier dans le fichier existant. Les évaluations utilisent actuellement **20 épisodes déterministes**, suivis de **3 épisodes enregistrés** ; ces nombres sont définis dans [`trainer.py`](trainer.py). Les fiches détaillent tous les hyperparamètres et les quelques réglages qui restent fixés dans le code.
+This snippet shows which fields to edit in the existing file. Evaluations currently use **20 deterministic episodes**, followed by **3 recorded episodes**; these counts are defined in [`trainer.py`](trainer.py). The experiment pages detail all hyperparameters and the few settings that remain fixed in the code.
 
-### Retrouver les sorties
+### Locate the outputs
 
 ```text
-runs/<environnement>/run_XXXX/
-├── config.yaml         # Configuration copiée à la création de l'expérience
+runs/<environment>/run_XXXX/
+├── config.yaml         # Configuration copied when the experiment is created
 ├── checkpoints/
-│   ├── latest.pt       # Dernière évaluation sauvegardée
-│   └── best.pt         # Meilleure moyenne d'évaluation sauvegardée
-├── models/             # Poids et métadonnées exportés aux évaluations
-├── records/            # Vidéos MP4 des épisodes enregistrés
-└── wandb/              # Journaux locaux W&B
+│   ├── latest.pt       # Latest saved evaluation
+│   └── best.pt         # Best saved mean evaluation reward
+├── models/             # Weights and metadata exported at evaluations
+├── records/            # MP4 videos of recorded episodes
+└── wandb/              # Local W&B logs
 ```
 
-Les sauvegardes et les vidéos sont produites à chaque `evaluation_interval`, sans sauvegarde finale supplémentaire garantie entre deux évaluations. `runs/` est ignoré par Git ; les rendus destinés à la documentation sont conservés dans `docs/trainings/`.
+Checkpoints and videos are produced every `evaluation_interval` episodes, with no guaranteed extra final save between evaluations. `runs/` is ignored by Git; media intended for the documentation is kept in `docs/trainings/`.
 
-Le fichier de configuration est copié **avant** l'application de `--episodes` : en cas de surcharge en ligne de commande, conserver aussi la commande utilisée. Le script `inference.py` est encore une ébauche ; les évaluations et vidéos utilisables passent actuellement par l'entraînement.
+The configuration file is copied **before** `--episodes` is applied: when overriding it on the command line, also keep the command used. The `inference.py` script is still a draft; usable evaluations and videos currently run through the training workflow.
 
-## Organisation du projet
+## Project structure
 
 ```text
-agents/          # Agents DQN et SAC, réseaux denses et convolutifs
-configs/         # Configurations YAML et chargement typé
-docs/            # Installation, résultats et notes techniques
-models/          # Sélection de poids conservés dans le dépôt
-tests/           # Scripts et notebooks d'exploration et de vérification
-env.py           # Environnements, prétraitements et enregistrement vidéo
-main.py          # Point d'entrée et reprise des expériences
-replay_buffer.py # Mémoire d'expérience partagée
-trainer.py       # Entraînement, évaluation, métriques et sauvegardes
+agents/          # DQN and SAC agents, fully connected and convolutional networks
+configs/         # YAML configurations and typed loading
+docs/            # Setup, results, and technical notes
+models/          # Selected weights kept in the repository
+tests/           # Exploration and verification scripts and notebooks
+env.py           # Environments, preprocessing, and video recording
+main.py          # Entry point and experiment resumption
+replay_buffer.py # Shared replay buffer
+trainer.py       # Training, evaluation, metrics, and checkpoints
 ```
 
 ## Documentation
 
-- [Installation détaillée, W&B, CUDA et Jupyter](docs/setup.md)
-- [Résultats de référence et protocole de lecture](docs/trainings/README.md)
+- [Detailed setup, W&B, CUDA, and Jupyter](docs/setup.md)
+- [Reference results and interpretation guidelines](docs/trainings/README.md)
 - [CartPole — DQN](docs/trainings/dql_on_cartpole/dql_on_cartpole.md)
 - [Pendulum — SAC](docs/trainings/sac_on_pendulum/sac_on_pendulum.md)
 - [BipedalWalker — SAC](docs/trainings/sac_on_bipedalwalker/sac_on_bipedalwalker.md)
-- [CarRacing — SAC avec CNN](docs/trainings/sac_on_carracing/sac_on_carracing.md)
-- [Note technique : scheduler du taux d'apprentissage](docs/technologies/lr_scheduler.md)
+- [CarRacing — SAC with CNNs](docs/trainings/sac_on_carracing/sac_on_carracing.md)
+- [Technical note: learning rate scheduler](docs/technologies/lr_scheduler.md)
 
-Malgré le nom historique du dépôt, ces quatre expériences utilisent les environnements **Classic Control** et **Box2D** de Gymnasium.
+Despite the repository's historical name, these four experiments use Gymnasium's **Classic Control** and **Box2D** environments.
